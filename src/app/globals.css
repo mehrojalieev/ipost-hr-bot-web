@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@theme {
+  /* iPOST brend — yorqin royal ko'k + to'q navy (logo ranglari) */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #dde4ff;
+  --color-brand-200: #c1ccff;
+  --color-brand-300: #97a8ff;
+  --color-brand-400: #6076fb;
+  --color-brand-500: #3a51f2;
+  --color-brand-600: #1f3ce6;
+  --color-brand-700: #1730c4;
+  --color-brand-800: #17299c;
+  --color-brand-900: #16277b;
+
+  /* To'q navy — logodagi strelka soyasi */
+  --color-ink-600: #26336f;
+  --color-ink-700: #1b2757;
+  --color-ink-800: #131c44;
+  --color-ink-900: #0b1338;
+  --color-ink-950: #060c24;
+
+  --color-cloud: #eff3f8;
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+:root {
+  --bg: #f1f5fb;
+  --surface: #ffffff;
+  --border: #e2e9f2;
+  --text: #0b1338;
+  --text-muted: #5a6b88;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-height: 100dvh;
+  min-height: 100vh;
+}
+
+/* Telegram Mini App safe-area */
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c4d2e2;
+  border-radius: 99px;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sheetUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-sheet {
+  animation: sheetUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 0.7s linear infinite;
+}
