@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LayoutGrid, Briefcase, Inbox } from "lucide-react";
 
 const TABS = [
-  { href: "/", label: "Boshqaruv", icon: "◧" },
-  { href: "/vacancies", label: "Vakansiyalar", icon: "💼" },
-  { href: "/applications", label: "Arizalar", icon: "📥" },
+  { href: "/", label: "Boshqaruv", Icon: LayoutGrid },
+  { href: "/vacancies", label: "Vakansiyalar", Icon: Briefcase },
+  { href: "/applications", label: "Arizalar", Icon: Inbox },
 ];
 
 // iPOST logo — tezkor strelka motividan soddalashtirilgan belgi
@@ -55,6 +56,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto max-w-2xl px-2 grid grid-cols-3">
           {TABS.map((t) => {
             const active = isActive(t.href);
+            const { Icon } = t;
             return (
               <Link
                 key={t.href}
@@ -64,11 +66,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <span
-                  className={`grid place-items-center h-8 w-14 rounded-full text-base transition-colors ${
+                  className={`grid place-items-center h-8 w-14 rounded-full transition-colors ${
                     active ? "bg-brand-500/12" : ""
                   }`}
                 >
-                  {t.icon}
+                  <Icon size={20} strokeWidth={active ? 2.4 : 2} />
                 </span>
                 {t.label}
               </Link>

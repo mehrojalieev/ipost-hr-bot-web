@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { X, TriangleAlert } from "lucide-react";
 import {
   EMOJI_OPTIONS,
   EMPLOYMENT_OPTIONS,
@@ -87,9 +88,10 @@ export default function VacancyForm({
           </h2>
           <button
             onClick={onClose}
+            aria-label="Yopish"
             className="h-8 w-8 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -210,7 +212,9 @@ export default function VacancyForm({
           </button>
 
           {error && (
-            <p className="text-sm text-rose-600 font-medium">⚠️ {error}</p>
+            <p className="inline-flex items-center gap-1.5 text-sm text-rose-600 font-medium">
+              <TriangleAlert size={15} /> {error}
+            </p>
           )}
         </div>
 

@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import AuthGate from "@/components/AuthGate";
 import Shell from "@/components/Shell";
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-inter",
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="uz" className={manrope.variable}>
+    <html lang="uz" className={inter.variable}>
       <body>
         {/* Telegram Mini App SDK */}
         <Script

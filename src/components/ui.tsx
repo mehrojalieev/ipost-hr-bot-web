@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Check, TriangleAlert } from "lucide-react";
 import { Application, STATUS_LABELS } from "@/lib/types";
 
 // ---- Status badge ----
@@ -10,12 +11,19 @@ const STATUS_STYLES: Record<Application["status"], string> = {
   accepted: "bg-emerald-500/12 text-emerald-700 ring-emerald-500/20",
   rejected: "bg-rose-500/12 text-rose-700 ring-rose-500/20",
 };
+const STATUS_DOT: Record<Application["status"], string> = {
+  new: "bg-brand-500",
+  reviewing: "bg-amber-500",
+  accepted: "bg-emerald-500",
+  rejected: "bg-rose-500",
+};
 
 export function StatusBadge({ status }: { status: Application["status"] }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${STATUS_STYLES[status]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${STATUS_STYLES[status]}`}
     >
+      <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[status]}`} />
       {STATUS_LABELS[status]}
     </span>
   );
@@ -43,7 +51,11 @@ export function Toast({
           type === "success" ? "bg-ink-900" : "bg-rose-600"
         }`}
       >
-        <span>{type === "success" ? "✅" : "⚠️"}</span>
+        {type === "success" ? (
+          <Check size={16} strokeWidth={2.6} />
+        ) : (
+          <TriangleAlert size={16} strokeWidth={2.4} />
+        )}
         {message}
       </div>
     </div>
@@ -107,13 +119,15 @@ export function EmptyState({
   title,
   subtitle,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   subtitle?: string;
 }) {
   return (
     <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white/50 py-14 text-center">
-      <div className="text-4xl">{icon}</div>
+      <div className="mx-auto h-14 w-14 rounded-2xl bg-cloud grid place-items-center text-[var(--text-muted)]">
+        {icon}
+      </div>
       <p className="mt-3 font-semibold text-ink-900">{title}</p>
       {subtitle && (
         <p className="mt-1 text-sm text-[var(--text-muted)]">{subtitle}</p>

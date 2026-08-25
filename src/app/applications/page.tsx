@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Phone, Copy, Inbox, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { Application, STATUS_LABELS } from "@/lib/types";
 import { EmptyState, Spinner, StatusBadge, Toast } from "@/components/ui";
@@ -90,7 +91,7 @@ export default function ApplicationsPage() {
         <Spinner />
       ) : filtered.length === 0 ? (
         <div className="mt-4">
-          <EmptyState icon="📭" title="Bu bo'limda ariza yo'q" />
+          <EmptyState icon={<Inbox size={24} />} title="Bu bo'limda ariza yo'q" />
         </div>
       ) : (
         <div className="space-y-2.5 mt-3">
@@ -158,9 +159,10 @@ function ApplicationSheet({
           <h2 className="font-semibold text-ink-900">Ariza tafsiloti</h2>
           <button
             onClick={onClose}
+            aria-label="Yopish"
             className="h-8 w-8 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -222,9 +224,9 @@ function ApplicationSheet({
 
           <a
             href={`tel:${app.phone.replace(/\s/g, "")}`}
-            className="block text-center rounded-xl bg-brand-600 text-white py-3 text-sm font-semibold active:scale-[0.99] transition"
+            className="flex items-center justify-center gap-2 rounded-xl bg-brand-600 text-white py-3 text-sm font-semibold active:scale-[0.99] transition"
           >
-            📞 Qo&apos;ng&apos;iroq qilish
+            <Phone size={16} /> Qo&apos;ng&apos;iroq qilish
           </a>
         </div>
       </div>
@@ -249,9 +251,10 @@ function Row({
         {copy && (
           <button
             onClick={() => navigator.clipboard?.writeText(value)}
-            className="text-brand-600 text-xs"
+            aria-label="Nusxalash"
+            className="text-brand-600"
           >
-            ⧉
+            <Copy size={14} />
           </button>
         )}
       </span>

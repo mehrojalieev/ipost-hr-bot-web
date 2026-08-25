@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Plus,
+  Wallet,
+  MapPin,
+  Pencil,
+  Trash2,
+  Pause,
+  Play,
+  Briefcase,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { Vacancy, VacancyInput } from "@/lib/types";
 import VacancyForm from "@/components/VacancyForm";
@@ -101,9 +111,9 @@ export default function VacanciesPage() {
         </div>
         <button
           onClick={openNew}
-          className="rounded-xl bg-brand-600 text-white px-4 py-2.5 text-sm font-semibold active:scale-[0.97] transition"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 text-white px-4 py-2.5 text-sm font-semibold active:scale-[0.97] transition"
         >
-          + Qo&apos;shish
+          <Plus size={17} strokeWidth={2.5} /> Qo&apos;shish
         </button>
       </div>
 
@@ -111,7 +121,7 @@ export default function VacanciesPage() {
         <Spinner />
       ) : items.length === 0 ? (
         <EmptyState
-          icon="💼"
+          icon={<Briefcase size={24} />}
           title="Vakansiyalar yo'q"
           subtitle="“+ Qo'shish” tugmasi bilan birinchi vakansiyani yarating."
         />
@@ -141,8 +151,13 @@ export default function VacanciesPage() {
                     {v.department} · {v.employment}
                   </p>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-ink-700">
-                    <span>💰 {v.salary}</span>
-                    <span>📍 {v.location}</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Wallet size={13} className="text-brand-600" /> {v.salary}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin size={13} className="text-[var(--text-muted)]" />{" "}
+                      {v.location}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -150,22 +165,31 @@ export default function VacanciesPage() {
               <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2">
                 <button
                   onClick={() => toggleActive(v)}
-                  className="text-xs font-medium text-ink-700 rounded-lg px-2.5 py-1.5 hover:bg-cloud"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-700 rounded-lg px-2.5 py-1.5 hover:bg-cloud"
                 >
-                  {v.active ? "⏸ Nofaol qilish" : "▶️ Faollashtirish"}
+                  {v.active ? (
+                    <>
+                      <Pause size={13} /> Nofaol qilish
+                    </>
+                  ) : (
+                    <>
+                      <Play size={13} /> Faollashtirish
+                    </>
+                  )}
                 </button>
                 <div className="ml-auto flex gap-1.5">
                   <button
                     onClick={() => openEdit(v)}
-                    className="text-xs font-semibold text-brand-700 rounded-lg px-3 py-1.5 bg-brand-500/10"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 rounded-lg px-3 py-1.5 bg-brand-500/10"
                   >
-                    ✏️ Tahrir
+                    <Pencil size={13} /> Tahrir
                   </button>
                   <button
                     onClick={() => setToDelete(v)}
-                    className="text-xs font-semibold text-rose-600 rounded-lg px-3 py-1.5 bg-rose-500/10"
+                    aria-label="O'chirish"
+                    className="inline-flex items-center text-xs font-semibold text-rose-600 rounded-lg px-3 py-1.5 bg-rose-500/10"
                   >
-                    🗑
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

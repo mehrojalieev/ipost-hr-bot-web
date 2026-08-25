@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  Briefcase,
+  Inbox,
+  Plus,
+  ClipboardList,
+  ArrowRight,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { Application } from "@/lib/types";
 import { StatusBadge, Spinner } from "@/components/ui";
@@ -46,14 +53,14 @@ export default function DashboardPage() {
           value={stats?.activeVacancies ?? 0}
           total={stats?.totalVacancies ?? 0}
           label="Faol vakansiya"
-          icon="💼"
+          icon={<Briefcase size={18} />}
           accent
         />
         <StatCard
           value={stats?.newApplications ?? 0}
           total={stats?.totalApplications ?? 0}
           label="Yangi ariza"
-          icon="📥"
+          icon={<Inbox size={18} />}
         />
       </div>
 
@@ -63,14 +70,14 @@ export default function DashboardPage() {
           href="/vacancies"
           className="rounded-2xl bg-ink-900 text-white p-4 flex flex-col justify-between h-24 active:scale-[0.98] transition"
         >
-          <span className="text-xl">➕</span>
+          <Plus size={22} className="text-brand-300" />
           <span className="text-sm font-semibold">Vakansiya qo&apos;shish</span>
         </Link>
         <Link
           href="/applications"
           className="rounded-2xl bg-white border border-[var(--border)] p-4 flex flex-col justify-between h-24 active:scale-[0.98] transition"
         >
-          <span className="text-xl">📋</span>
+          <ClipboardList size={22} className="text-brand-600" />
           <span className="text-sm font-semibold text-ink-900">
             Arizalarni ko&apos;rish
           </span>
@@ -81,8 +88,11 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-ink-900">So&apos;nggi arizalar</h2>
-          <Link href="/applications" className="text-sm text-brand-600 font-medium">
-            Barchasi →
+          <Link
+            href="/applications"
+            className="inline-flex items-center gap-1 text-sm text-brand-600 font-medium"
+          >
+            Barchasi <ArrowRight size={15} />
           </Link>
         </div>
         <div className="space-y-2.5">
@@ -126,7 +136,7 @@ function StatCard({
   value: number;
   total: number;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   accent?: boolean;
 }) {
   return (
@@ -138,7 +148,13 @@ function StatCard({
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-lg">{icon}</span>
+        <span
+          className={`grid place-items-center h-9 w-9 rounded-xl ${
+            accent ? "bg-brand-600 text-white" : "bg-cloud text-brand-600"
+          }`}
+        >
+          {icon}
+        </span>
         <span className="text-xs text-[var(--text-muted)]">/ {total}</span>
       </div>
       <p className="mt-2 text-2xl font-bold text-ink-900">{value}</p>
