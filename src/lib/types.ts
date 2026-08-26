@@ -37,6 +37,26 @@ export const STATUS_LABELS: Record<Application["status"], string> = {
   rejected: "Rad etildi",
 };
 
+// Nomzod/xodim tomonidan yuborilgan murojaat/xabar
+export interface Message {
+  id: string;
+  name: string;
+  telegramUser: string;
+  topic: string; // mavzu (masalan: "Ish vaqti", "Ariza holati")
+  text: string;
+  status: "new" | "answered";
+  createdAt: string;
+}
+
+// Vakansiya bo'yicha arizalar statistikasi (filtr/analitika uchun)
+export interface VacancyStat {
+  vacancyId: string;
+  title: string;
+  emoji: string;
+  count: number;
+  active: boolean;
+}
+
 export const EMPLOYMENT_OPTIONS = [
   "To'liq stavka",
   "Yarim stavka",

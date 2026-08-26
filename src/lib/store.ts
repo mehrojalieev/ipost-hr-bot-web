@@ -2,7 +2,7 @@
 // Diqqat: Vercel serverless da xotira saqlanmaydi — bu faqat demo/mock uchun.
 // Real saqlash uchun Postgres (Neon/Supabase) ulang.
 
-import { Application, Vacancy, VacancyInput } from "./types";
+import { Application, Message, Vacancy, VacancyInput, VacancyStat } from "./types";
 
 // --- Vakansiyalar (bot bilan bir xil boshlang'ich data) ---
 let vacancies: Vacancy[] = [
@@ -140,6 +140,37 @@ let applications: Application[] = [
   },
 ];
 
+// --- Murojaatlar (nomzodlardan kelgan xabarlar, mock) ---
+let messages: Message[] = [
+  {
+    id: "msg-1",
+    name: "Dilnoza Karimova",
+    telegramUser: "@dilnoza_k",
+    topic: "Ariza holati",
+    text: "Assalomu alaykum, Call-operator lavozimiga ariza qoldirgandim. Qachon javob bo'ladi?",
+    status: "new",
+    createdAt: "2026-08-26T09:10:00.000Z",
+  },
+  {
+    id: "msg-2",
+    name: "Bekzod Rahimov",
+    telegramUser: "@bekzod_r",
+    topic: "Ish vaqti",
+    text: "Kuryer uchun ish vaqti nechchidan nechchigacha? Yarim stavka bormi?",
+    status: "new",
+    createdAt: "2026-08-26T08:30:00.000Z",
+  },
+  {
+    id: "msg-3",
+    name: "Nigora Islomova",
+    telegramUser: "@nigora_i",
+    topic: "Maosh",
+    text: "Sotuv menejeri bonus tizimi qanday hisoblanadi?",
+    status: "answered",
+    createdAt: "2026-08-25T15:00:00.000Z",
+  },
+];
+
 let idCounter = 100;
 function newId(prefix: string): string {
   idCounter += 1;
@@ -210,14 +241,45 @@ export function updateApplicationStatus(
   return app;
 }
 
+// ---------- Murojaatlar ----------
+export function listMessages(): Message[] {
+  return [...messages].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function updateMessageStatus(
+  id: string,
+  status: Message["status"]
+): Message | undefined {
+  const m = messages.find((x) => x.id === id);
+  if (!m) return undefined;
+  m.status = status;
+  return m;
+}
+
+// ---------- Vakansiya bo'yicha arizalar (analitika/filtr) ----------
+export function getVacancyBreakdown(): VacancyStat[] {
+  return vacancies
+    .map((v) => ({
+      vacancyId: v.id,
+      title: v.title,
+      emoji: v.emoji,
+      active: v.active,
+      count: applications.filter((a) => a.vacancyId === v.id).length,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
 // ---------- Statistika (dashboard) ----------
 export function getStats() {
   const active = vacancies.filter((v) => v.active).length;
   const newApps = applications.filter((a) => a.status === "new").length;
+  const newMsgs = messages.filter((m) => m.status === "new").length;
   return {
     totalVacancies: vacancies.length,
     activeVacancies: active,
     totalApplications: applications.length,
     newApplications: newApps,
+    totalMessages: messages.length,
+    newMessages: newMsgs,
   };
 }

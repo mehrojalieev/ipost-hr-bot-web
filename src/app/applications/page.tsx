@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Phone, Copy, Inbox, X } from "lucide-react";
+import { Phone, Copy, Inbox, X, ListFilter } from "lucide-react";
 import { api } from "@/lib/api";
 import { Application, STATUS_LABELS } from "@/lib/types";
 import { EmptyState, Spinner, StatusBadge, Toast } from "@/components/ui";
@@ -28,6 +28,7 @@ export default function ApplicationsPage() {
   const [items, setItems] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
+  const [vac, setVac] = useState<string>("all");
   const [open, setOpen] = useState<Application | undefined>();
   const [toast, setToast] = useState<string | null>(null);
 
@@ -38,9 +39,25 @@ export default function ApplicationsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Lavozimlar ro'yxati + har biriga arizalar soni
+  const vacancyOptions = useMemo(() => {
+    const map = new Map<string, { id: string; title: string; count: number }>();
+    for (const a of items) {
+      const cur = map.get(a.vacancyId);
+      if (cur) cur.count += 1;
+      else map.set(a.vacancyId, { id: a.vacancyId, title: a.vacancyTitle, count: 1 });
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count);
+  }, [items]);
+
   const filtered = useMemo(
-    () => (filter === "all" ? items : items.filter((a) => a.status === filter)),
-    [items, filter]
+    () =>
+      items.filter(
+        (a) =>
+          (filter === "all" || a.status === filter) &&
+          (vac === "all" || a.vacancyId === vac)
+      ),
+    [items, filter, vac]
   );
 
   async function changeStatus(app: Application, status: Application["status"]) {
@@ -78,7 +95,7 @@ export default function ApplicationsPage() {
               className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-ink-900 text-white"
-                  : "bg-white border border-[var(--border)] text-ink-700"
+                  : "bg-white border border-[var(--border)] text-ink-700 hover:border-brand-300 hover:text-brand-700"
               }`}
             >
               {f.label} {count > 0 && <span className="opacity-70">· {count}</span>}
@@ -86,6 +103,25 @@ export default function ApplicationsPage() {
           );
         })}
       </div>
+
+      {/* Lavozim bo'yicha filtr */}
+      {vacancyOptions.length > 0 && (
+        <div className="mb-4 flex items-center gap-2">
+          <ListFilter size={16} className="text-[var(--text-muted)] shrink-0" />
+          <select
+            value={vac}
+            onChange={(e) => setVac(e.target.value)}
+            className="flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm text-ink-900 focus:border-brand-500 outline-none"
+          >
+            <option value="all">Barcha lavozimlar ({items.length})</option>
+            {vacancyOptions.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.title} ({v.count})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {loading ? (
         <Spinner />
@@ -99,7 +135,7 @@ export default function ApplicationsPage() {
             <button
               key={a.id}
               onClick={() => setOpen(a)}
-              className="w-full text-left flex items-center gap-3 rounded-2xl bg-white border border-[var(--border)] p-3.5 active:scale-[0.99] transition"
+              className="w-full text-left flex items-center gap-3 rounded-2xl bg-white border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm active:scale-[0.99] transition"
             >
               <div className="h-11 w-11 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
                 {a.name.charAt(0)}
@@ -212,7 +248,7 @@ function ApplicationSheet({
                     className={`rounded-xl py-2.5 text-sm font-semibold transition ${
                       active
                         ? "bg-ink-900 text-white"
-                        : "bg-white border border-[var(--border)] text-ink-700"
+                        : "bg-white border border-[var(--border)] text-ink-700 hover:border-brand-300 hover:bg-brand-500/5"
                     }`}
                   >
                     {STATUS_LABELS[s]}
@@ -224,7 +260,7 @@ function ApplicationSheet({
 
           <a
             href={`tel:${app.phone.replace(/\s/g, "")}`}
-            className="flex items-center justify-center gap-2 rounded-xl bg-brand-600 text-white py-3 text-sm font-semibold active:scale-[0.99] transition"
+            className="flex items-center justify-center gap-2 rounded-xl bg-brand-600 text-white py-3 text-sm font-semibold hover:bg-brand-700 active:scale-[0.99] transition"
           >
             <Phone size={16} /> Qo&apos;ng&apos;iroq qilish
           </a>

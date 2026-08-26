@@ -10,9 +10,11 @@ import {
   Pause,
   Play,
   Briefcase,
+  FileDown,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { Vacancy, VacancyInput } from "@/lib/types";
+import { Vacancy, VacancyInput, VacancyStat } from "@/lib/types";
+import { exportVacanciesPdf } from "@/lib/pdf";
 import VacancyForm from "@/components/VacancyForm";
 import {
   ConfirmDialog,
@@ -28,6 +30,7 @@ export default function VacanciesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Vacancy | undefined>();
   const [toDelete, setToDelete] = useState<Vacancy | undefined>();
+  const [breakdown, setBreakdown] = useState<VacancyStat[]>([]);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   function load() {
@@ -36,9 +39,26 @@ export default function VacanciesPage() {
       .then((r) => setItems(r.vacancies))
       .catch(() => setToast({ msg: "Yuklashda xatolik", type: "error" }))
       .finally(() => setLoading(false));
+    api
+      .get<{ byVacancy: VacancyStat[] }>("/api/stats")
+      .then((r) => setBreakdown(r.byVacancy))
+      .catch(() => {});
   }
 
   useEffect(load, []);
+
+  async function downloadPdf() {
+    if (items.length === 0) {
+      setToast({ msg: "Vakansiyalar yo'q", type: "error" });
+      return;
+    }
+    try {
+      await exportVacanciesPdf(items, breakdown);
+      setToast({ msg: "PDF yuklab olindi", type: "success" });
+    } catch {
+      setToast({ msg: "PDF yaratishda xatolik", type: "error" });
+    }
+  }
 
   function openNew() {
     setEditing(undefined);
@@ -109,12 +129,21 @@ export default function VacanciesPage() {
             {items.length} ta lavozim
           </p>
         </div>
-        <button
-          onClick={openNew}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 text-white px-4 py-2.5 text-sm font-semibold active:scale-[0.97] transition"
-        >
-          <Plus size={17} strokeWidth={2.5} /> Qo&apos;shish
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={downloadPdf}
+            aria-label="PDF yuklab olish"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-white text-ink-700 px-3 py-2.5 text-sm font-semibold hover:bg-cloud hover:border-brand-300 active:scale-[0.97] transition"
+          >
+            <FileDown size={16} /> PDF
+          </button>
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 text-white px-4 py-2.5 text-sm font-semibold hover:bg-brand-700 active:scale-[0.97] transition"
+          >
+            <Plus size={17} strokeWidth={2.5} /> Qo&apos;shish
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -130,7 +159,7 @@ export default function VacanciesPage() {
           {items.map((v) => (
             <div
               key={v.id}
-              className="rounded-2xl bg-white border border-[var(--border)] p-4"
+              className="rounded-2xl bg-white border border-[var(--border)] p-4 hover:border-brand-200 hover:shadow-sm transition"
             >
               <div className="flex items-start gap-3">
                 <div className="h-11 w-11 shrink-0 rounded-xl bg-cloud grid place-items-center text-xl">
@@ -165,7 +194,7 @@ export default function VacanciesPage() {
               <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2">
                 <button
                   onClick={() => toggleActive(v)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-700 rounded-lg px-2.5 py-1.5 hover:bg-cloud"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-700 rounded-lg px-2.5 py-1.5 hover:bg-cloud transition-colors"
                 >
                   {v.active ? (
                     <>
@@ -180,14 +209,14 @@ export default function VacanciesPage() {
                 <div className="ml-auto flex gap-1.5">
                   <button
                     onClick={() => openEdit(v)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 rounded-lg px-3 py-1.5 bg-brand-500/10"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 rounded-lg px-3 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
                   >
                     <Pencil size={13} /> Tahrir
                   </button>
                   <button
                     onClick={() => setToDelete(v)}
                     aria-label="O'chirish"
-                    className="inline-flex items-center text-xs font-semibold text-rose-600 rounded-lg px-3 py-1.5 bg-rose-500/10"
+                    className="inline-flex items-center text-xs font-semibold text-rose-600 rounded-lg px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>

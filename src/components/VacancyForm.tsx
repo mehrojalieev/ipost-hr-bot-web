@@ -222,14 +222,14 @@ export default function VacancyForm({
         <div className="sticky bottom-0 bg-white/95 backdrop-blur px-5 py-4 border-t border-[var(--border)] flex gap-2.5">
           <button
             onClick={onClose}
-            className="flex-1 rounded-xl border border-[var(--border)] py-3 text-sm font-medium text-ink-800"
+            className="flex-1 rounded-xl border border-[var(--border)] py-3 text-sm font-medium text-ink-800 hover:bg-cloud transition-colors"
           >
             Bekor
           </button>
           <button
             onClick={submit}
             disabled={saving}
-            className="flex-[2] rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white disabled:opacity-60 active:scale-[0.99] transition"
+            className="flex-[2] rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 active:scale-[0.99] transition"
           >
             {saving ? "Saqlanmoqda…" : initial ? "Saqlash" : "Qo'shish"}
           </button>

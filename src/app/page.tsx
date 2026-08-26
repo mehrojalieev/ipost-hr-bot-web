@@ -10,7 +10,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { Application } from "@/lib/types";
+import { Application, VacancyStat } from "@/lib/types";
 import { StatusBadge, Spinner } from "@/components/ui";
 import { relativeDay } from "@/lib/format";
 
@@ -19,24 +19,30 @@ interface Stats {
   activeVacancies: number;
   totalApplications: number;
   newApplications: number;
+  totalMessages: number;
+  newMessages: number;
 }
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [byVacancy, setByVacancy] = useState<VacancyStat[]>([]);
   const [recent, setRecent] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      api.get<{ stats: Stats }>("/api/stats"),
+      api.get<{ stats: Stats; byVacancy: VacancyStat[] }>("/api/stats"),
       api.get<{ applications: Application[] }>("/api/applications"),
     ])
       .then(([s, a]) => {
         setStats(s.stats);
+        setByVacancy(s.byVacancy);
         setRecent(a.applications.slice(0, 4));
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const maxCount = Math.max(1, ...byVacancy.map((v) => v.count));
 
   if (loading) return <Spinner />;
 
@@ -68,14 +74,14 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/vacancies"
-          className="rounded-2xl bg-ink-900 text-white p-4 flex flex-col justify-between h-24 active:scale-[0.98] transition"
+          className="rounded-2xl bg-ink-900 text-white p-4 flex flex-col justify-between h-24 hover:bg-ink-800 active:scale-[0.98] transition"
         >
           <Plus size={22} className="text-brand-300" />
           <span className="text-sm font-semibold">Vakansiya qo&apos;shish</span>
         </Link>
         <Link
           href="/applications"
-          className="rounded-2xl bg-white border border-[var(--border)] p-4 flex flex-col justify-between h-24 active:scale-[0.98] transition"
+          className="rounded-2xl bg-white border border-[var(--border)] p-4 flex flex-col justify-between h-24 hover:border-brand-300 hover:shadow-sm active:scale-[0.98] transition"
         >
           <ClipboardList size={22} className="text-brand-600" />
           <span className="text-sm font-semibold text-ink-900">
@@ -83,6 +89,38 @@ export default function DashboardPage() {
           </span>
         </Link>
       </div>
+
+      {/* Vakansiya bo'yicha arizalar (kategoriya taqsimoti) */}
+      {byVacancy.some((v) => v.count > 0) && (
+        <div>
+          <h2 className="font-semibold text-ink-900 mb-3">
+            Vakansiya bo&apos;yicha arizalar
+          </h2>
+          <div className="rounded-2xl bg-white border border-[var(--border)] p-4 space-y-3.5">
+            {byVacancy
+              .filter((v) => v.count > 0)
+              .map((v) => (
+                <div key={v.vacancyId}>
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="flex items-center gap-2 text-ink-800 min-w-0">
+                      <span className="text-base shrink-0">{v.emoji}</span>
+                      <span className="truncate">{v.title}</span>
+                    </span>
+                    <span className="font-semibold text-ink-900 shrink-0 ml-2">
+                      {v.count} ta
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-cloud overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-brand-500 transition-all duration-500"
+                      style={{ width: `${(v.count / maxCount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent applications */}
       <div>
@@ -104,7 +142,7 @@ export default function DashboardPage() {
           {recent.map((a) => (
             <div
               key={a.id}
-              className="flex items-center gap-3 rounded-2xl bg-white border border-[var(--border)] p-3.5"
+              className="flex items-center gap-3 rounded-2xl bg-white border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm transition"
             >
               <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
                 {a.name.charAt(0)}

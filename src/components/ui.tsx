@@ -95,14 +95,14 @@ export function ConfirmDialog({
         <div className="mt-5 flex gap-2.5">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm font-medium text-ink-800 active:scale-[0.98] transition"
+            className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm font-medium text-ink-800 hover:bg-cloud active:scale-[0.98] transition"
           >
             Bekor qilish
           </button>
           <button
             onClick={onConfirm}
             className={`flex-1 rounded-xl py-2.5 text-sm font-semibold text-white active:scale-[0.98] transition ${
-              danger ? "bg-rose-600" : "bg-brand-600"
+              danger ? "bg-rose-600 hover:bg-rose-700" : "bg-brand-600 hover:bg-brand-700"
             }`}
           >
             {confirmLabel}
