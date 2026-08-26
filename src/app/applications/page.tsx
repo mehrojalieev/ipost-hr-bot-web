@@ -75,7 +75,7 @@ export default function ApplicationsPage() {
 
   return (
     <div className="animate-fade-up">
-      <h1 className="text-xl font-bold text-ink-900 mb-1">Arizalar</h1>
+      <h1 className="text-xl font-bold text-content mb-1">Arizalar</h1>
       <p className="text-sm text-[var(--text-muted)] mb-4">
         {items.length} ta ariza
       </p>
@@ -95,7 +95,7 @@ export default function ApplicationsPage() {
               className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-ink-900 text-white"
-                  : "bg-white border border-[var(--border)] text-ink-700 hover:border-brand-300 hover:text-brand-700"
+                  : "bg-surface border border-[var(--border)] text-content hover:border-brand-300 hover:text-brand-700"
               }`}
             >
               {f.label} {count > 0 && <span className="opacity-70">· {count}</span>}
@@ -111,7 +111,7 @@ export default function ApplicationsPage() {
           <select
             value={vac}
             onChange={(e) => setVac(e.target.value)}
-            className="flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm text-ink-900 focus:border-brand-500 outline-none"
+            className="flex-1 rounded-xl border border-[var(--border)] bg-surface px-3 py-2 text-sm text-content focus:border-brand-500 outline-none"
           >
             <option value="all">Barcha lavozimlar ({items.length})</option>
             {vacancyOptions.map((v) => (
@@ -135,13 +135,13 @@ export default function ApplicationsPage() {
             <button
               key={a.id}
               onClick={() => setOpen(a)}
-              className="w-full text-left flex items-center gap-3 rounded-2xl bg-white border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm active:scale-[0.99] transition"
+              className="w-full text-left flex items-center gap-3 rounded-2xl bg-surface border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm active:scale-[0.99] transition"
             >
               <div className="h-11 w-11 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
                 {a.name.charAt(0)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-ink-900 truncate">
+                <p className="text-sm font-semibold text-content truncate">
                   {a.name}
                 </p>
                 <p className="text-xs text-[var(--text-muted)] truncate">
@@ -188,11 +188,11 @@ function ApplicationSheet({
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl animate-sheet"
+        className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface shadow-2xl animate-sheet"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
-          <h2 className="font-semibold text-ink-900">Ariza tafsiloti</h2>
+        <div className="sticky top-0 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+          <h2 className="font-semibold text-content">Ariza tafsiloti</h2>
           <button
             onClick={onClose}
             aria-label="Yopish"
@@ -208,7 +208,7 @@ function ApplicationSheet({
               {app.name.charAt(0)}
             </div>
             <div>
-              <p className="font-semibold text-ink-900 text-lg">{app.name}</p>
+              <p className="font-semibold text-content text-lg">{app.name}</p>
               <StatusBadge status={app.status} />
             </div>
           </div>
@@ -229,7 +229,7 @@ function ApplicationSheet({
             <p className="text-xs font-semibold text-[var(--text-muted)] mb-1.5">
               Ish tajribasi
             </p>
-            <p className="rounded-xl bg-cloud p-3.5 text-sm text-ink-800 leading-relaxed">
+            <p className="rounded-xl bg-cloud p-3.5 text-sm text-content leading-relaxed">
               {app.experience || "—"}
             </p>
           </div>
@@ -248,7 +248,7 @@ function ApplicationSheet({
                     className={`rounded-xl py-2.5 text-sm font-semibold transition ${
                       active
                         ? "bg-ink-900 text-white"
-                        : "bg-white border border-[var(--border)] text-ink-700 hover:border-brand-300 hover:bg-brand-500/5"
+                        : "bg-surface border border-[var(--border)] text-content hover:border-brand-300 hover:bg-brand-500/5"
                     }`}
                   >
                     {STATUS_LABELS[s]}
@@ -282,7 +282,7 @@ function Row({
   return (
     <div className="flex items-center justify-between rounded-xl border border-[var(--border)] px-3.5 py-2.5">
       <span className="text-xs text-[var(--text-muted)]">{label}</span>
-      <span className="text-sm font-medium text-ink-900 flex items-center gap-2">
+      <span className="text-sm font-medium text-content flex items-center gap-2">
         {value}
         {copy && (
           <button

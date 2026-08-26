@@ -50,7 +50,7 @@ export default function DashboardPage() {
     <div className="space-y-6 animate-fade-up">
       <div>
         <p className="text-sm text-[var(--text-muted)]">Xush kelibsiz 👋</p>
-        <h1 className="text-xl font-bold text-ink-900">Boshqaruv paneli</h1>
+        <h1 className="text-xl font-bold text-content">Boshqaruv paneli</h1>
       </div>
 
       {/* Stat cards */}
@@ -81,10 +81,10 @@ export default function DashboardPage() {
         </Link>
         <Link
           href="/applications"
-          className="rounded-2xl bg-white border border-[var(--border)] p-4 flex flex-col justify-between h-24 hover:border-brand-300 hover:shadow-sm active:scale-[0.98] transition"
+          className="rounded-2xl bg-surface border border-[var(--border)] p-4 flex flex-col justify-between h-24 hover:border-brand-300 hover:shadow-sm active:scale-[0.98] transition"
         >
           <ClipboardList size={22} className="text-brand-600" />
-          <span className="text-sm font-semibold text-ink-900">
+          <span className="text-sm font-semibold text-content">
             Arizalarni ko&apos;rish
           </span>
         </Link>
@@ -93,20 +93,20 @@ export default function DashboardPage() {
       {/* Vakansiya bo'yicha arizalar (kategoriya taqsimoti) */}
       {byVacancy.some((v) => v.count > 0) && (
         <div>
-          <h2 className="font-semibold text-ink-900 mb-3">
+          <h2 className="font-semibold text-content mb-3">
             Vakansiya bo&apos;yicha arizalar
           </h2>
-          <div className="rounded-2xl bg-white border border-[var(--border)] p-4 space-y-3.5">
+          <div className="rounded-2xl bg-surface border border-[var(--border)] p-4 space-y-3.5">
             {byVacancy
               .filter((v) => v.count > 0)
               .map((v) => (
                 <div key={v.vacancyId}>
                   <div className="flex items-center justify-between text-sm mb-1.5">
-                    <span className="flex items-center gap-2 text-ink-800 min-w-0">
+                    <span className="flex items-center gap-2 text-content min-w-0">
                       <span className="text-base shrink-0">{v.emoji}</span>
                       <span className="truncate">{v.title}</span>
                     </span>
-                    <span className="font-semibold text-ink-900 shrink-0 ml-2">
+                    <span className="font-semibold text-content shrink-0 ml-2">
                       {v.count} ta
                     </span>
                   </div>
@@ -125,7 +125,7 @@ export default function DashboardPage() {
       {/* Recent applications */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-ink-900">So&apos;nggi arizalar</h2>
+          <h2 className="font-semibold text-content">So&apos;nggi arizalar</h2>
           <Link
             href="/applications"
             className="inline-flex items-center gap-1 text-sm text-brand-600 font-medium"
@@ -142,13 +142,13 @@ export default function DashboardPage() {
           {recent.map((a) => (
             <div
               key={a.id}
-              className="flex items-center gap-3 rounded-2xl bg-white border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm transition"
+              className="flex items-center gap-3 rounded-2xl bg-surface border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm transition"
             >
               <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
                 {a.name.charAt(0)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-ink-900 truncate">
+                <p className="text-sm font-semibold text-content truncate">
                   {a.name}
                 </p>
                 <p className="text-xs text-[var(--text-muted)] truncate">
@@ -182,7 +182,7 @@ function StatCard({
       className={`rounded-2xl p-4 border ${
         accent
           ? "bg-brand-500/10 border-brand-500/20"
-          : "bg-white border-[var(--border)]"
+          : "bg-surface border-[var(--border)]"
       }`}
     >
       <div className="flex items-center justify-between">
@@ -195,7 +195,7 @@ function StatCard({
         </span>
         <span className="text-xs text-[var(--text-muted)]">/ {total}</span>
       </div>
-      <p className="mt-2 text-2xl font-bold text-ink-900">{value}</p>
+      <p className="mt-2 text-2xl font-bold text-content">{value}</p>
       <p className="text-xs text-[var(--text-muted)]">{label}</p>
     </div>
   );

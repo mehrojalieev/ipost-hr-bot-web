@@ -78,12 +78,12 @@ export default function VacancyForm({
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl animate-sheet"
+        className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface shadow-2xl animate-sheet"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
-          <h2 className="font-semibold text-ink-900">
+        <div className="sticky top-0 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+          <h2 className="font-semibold text-content">
             {initial ? "Vakansiyani tahrirlash" : "Yangi vakansiya"}
           </h2>
           <button
@@ -103,7 +103,7 @@ export default function VacancyForm({
               <select
                 value={form.emoji}
                 onChange={(e) => set("emoji", e.target.value)}
-                className="w-16 rounded-xl border border-[var(--border)] bg-white px-2 text-xl text-center focus:border-brand-500 outline-none"
+                className="w-16 rounded-xl border border-[var(--border)] bg-surface px-2 text-xl text-center focus:border-brand-500 outline-none"
               >
                 {EMOJI_OPTIONS.map((e) => (
                   <option key={e} value={e}>
@@ -195,7 +195,7 @@ export default function VacancyForm({
             onClick={() => set("active", !form.active)}
             className="w-full flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-3"
           >
-            <span className="text-sm font-medium text-ink-800">
+            <span className="text-sm font-medium text-content">
               Faol (foydalanuvchilarga ko&apos;rinadi)
             </span>
             <span
@@ -204,7 +204,7 @@ export default function VacancyForm({
               }`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface shadow transition-all ${
                   form.active ? "left-[22px]" : "left-0.5"
                 }`}
               />
@@ -219,10 +219,10 @@ export default function VacancyForm({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white/95 backdrop-blur px-5 py-4 border-t border-[var(--border)] flex gap-2.5">
+        <div className="sticky bottom-0 bg-surface/95 backdrop-blur px-5 py-4 border-t border-[var(--border)] flex gap-2.5">
           <button
             onClick={onClose}
-            className="flex-1 rounded-xl border border-[var(--border)] py-3 text-sm font-medium text-ink-800 hover:bg-cloud transition-colors"
+            className="flex-1 rounded-xl border border-[var(--border)] py-3 text-sm font-medium text-content hover:bg-cloud transition-colors"
           >
             Bekor
           </button>
@@ -240,7 +240,7 @@ export default function VacancyForm({
 }
 
 const input =
-  "w-full rounded-xl border border-[var(--border)] bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-slate-400 focus:border-brand-500 outline-none transition-colors";
+  "w-full rounded-xl border border-[var(--border)] bg-surface px-3.5 py-2.5 text-sm text-content placeholder:text-slate-400 focus:border-brand-500 outline-none transition-colors";
 
 function Label({ children }: { children: React.ReactNode }) {
   return (

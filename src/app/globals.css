@@ -1,26 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  /* iPOST brend — yorqin royal ko'k + to'q navy (logo ranglari) */
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #dde4ff;
-  --color-brand-200: #c1ccff;
-  --color-brand-300: #97a8ff;
-  --color-brand-400: #6076fb;
-  --color-brand-500: #3a51f2;
-  --color-brand-600: #1f3ce6;
-  --color-brand-700: #1730c4;
-  --color-brand-800: #17299c;
-  --color-brand-900: #16277b;
+  /* iPOST JOBS brend — royal ko'k (logo rangi) */
+  --color-brand-50: #eef1ff;
+  --color-brand-100: #dce2ff;
+  --color-brand-200: #bcc6ff;
+  --color-brand-300: #93a2ff;
+  --color-brand-400: #6274fb;
+  --color-brand-500: #3a4ff0;
+  --color-brand-600: #1f30d6;
+  --color-brand-700: #1826b3;
+  --color-brand-800: #16228f;
+  --color-brand-900: #16226f;
 
-  /* To'q navy — logodagi strelka soyasi */
+  /* To'q navy — logodagi strelka soyasi (statik chrome) */
   --color-ink-600: #26336f;
   --color-ink-700: #1b2757;
   --color-ink-800: #131c44;
   --color-ink-900: #0b1338;
   --color-ink-950: #060c24;
 
-  --color-cloud: #eff3f8;
+  /* Semantik, mavzuga bog'liq (light/dark avtomatik) */
+  --color-canvas: var(--bg);
+  --color-surface: var(--surface);
+  --color-cloud: var(--subtle);
+  --color-content: var(--text);
+  --color-line: var(--border);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -29,12 +34,24 @@
   --radius-2xl: 1.25rem;
 }
 
+/* ---- Light (default) ---- */
 :root {
   --bg: #f1f5fb;
   --surface: #ffffff;
+  --subtle: #eef2f8;
   --border: #e2e9f2;
   --text: #0b1338;
   --text-muted: #5a6b88;
+}
+
+/* ---- Dark ---- */
+:root[data-theme="dark"] {
+  --bg: #0a1020;
+  --surface: #141d31;
+  --subtle: #1d2840;
+  --border: #273349;
+  --text: #e9eff8;
+  --text-muted: #93a3bd;
 }
 
 * {
@@ -71,6 +88,9 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+html {
+  transition: background-color 0.25s ease;
+}
 
 body {
   min-height: 100dvh;
@@ -90,7 +110,7 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c4d2e2;
+  background: var(--border);
   border-radius: 99px;
 }
 

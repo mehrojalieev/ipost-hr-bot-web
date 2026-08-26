@@ -48,7 +48,7 @@ export default function MessagesPage() {
 
   return (
     <div className="animate-fade-up">
-      <h1 className="text-xl font-bold text-ink-900 mb-1">Murojaatlar</h1>
+      <h1 className="text-xl font-bold text-content mb-1">Murojaatlar</h1>
       <p className="text-sm text-[var(--text-muted)] mb-4">
         Nomzodlardan kelgan xabarlar · {items.length} ta
       </p>
@@ -67,7 +67,7 @@ export default function MessagesPage() {
               className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-ink-900 text-white"
-                  : "bg-white border border-[var(--border)] text-ink-700 hover:border-brand-300 hover:text-brand-700"
+                  : "bg-surface border border-[var(--border)] text-content hover:border-brand-300 hover:text-brand-700"
               }`}
             >
               {f.label} {count > 0 && <span className="opacity-70">· {count}</span>}
@@ -92,8 +92,8 @@ export default function MessagesPage() {
               key={m.id}
               className={`rounded-2xl border p-4 transition hover:shadow-sm ${
                 m.status === "new"
-                  ? "bg-white border-brand-500/30 hover:border-brand-400"
-                  : "bg-white/70 border-[var(--border)] hover:border-brand-200"
+                  ? "bg-surface border-brand-500/30 hover:border-brand-400"
+                  : "bg-surface/70 border-[var(--border)] hover:border-brand-200"
               }`}
             >
               <div className="flex items-start gap-3">
@@ -102,7 +102,7 @@ export default function MessagesPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-ink-900 truncate">
+                    <p className="text-sm font-semibold text-content truncate">
                       {m.name}
                     </p>
                     {m.status === "new" && (
@@ -113,12 +113,12 @@ export default function MessagesPage() {
                     {m.telegramUser} · {formatDate(m.createdAt)}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full bg-cloud px-2.5 py-0.5 text-[11px] font-medium text-ink-700">
+                <span className="shrink-0 rounded-full bg-cloud px-2.5 py-0.5 text-[11px] font-medium text-content">
                   {m.topic}
                 </span>
               </div>
 
-              <p className="mt-3 text-sm text-ink-800 leading-relaxed">
+              <p className="mt-3 text-sm text-content leading-relaxed">
                 {m.text}
               </p>
 
@@ -127,7 +127,7 @@ export default function MessagesPage() {
                   onClick={() => markAnswered(m)}
                   className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-lg px-3 py-1.5 transition-colors ${
                     m.status === "answered"
-                      ? "text-[var(--text-muted)] bg-cloud hover:bg-slate-200"
+                      ? "text-[var(--text-muted)] bg-cloud hover:bg-cloud"
                       : "text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20"
                   }`}
                 >

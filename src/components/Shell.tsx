@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Briefcase, Inbox, MessageSquare } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const TABS = [
   { href: "/", label: "Boshqaruv", Icon: LayoutGrid },
@@ -50,10 +51,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="leading-tight">
             <p className="text-[15px] font-extrabold tracking-tight">
-              iPOST <span className="font-medium text-white/70">HR</span>
+              iPOST <span className="font-medium text-white/70">JOBS</span>
             </p>
-            <p className="text-[11px] text-white/70 -mt-0.5">Boshqaruv paneli</p>
+            <p className="text-[11px] text-white/70 -mt-0.5">HR boshqaruv paneli</p>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -63,7 +65,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Bottom nav */}
-      <nav className="safe-bottom fixed bottom-0 inset-x-0 z-20 bg-white/90 backdrop-blur border-t border-[var(--border)]">
+      <nav className="safe-bottom fixed bottom-0 inset-x-0 z-20 bg-surface/90 backdrop-blur border-t border-[var(--border)]">
         <div className="mx-auto max-w-2xl px-2 grid grid-cols-4">
           {TABS.map((t) => {
             const active = isActive(t.href);

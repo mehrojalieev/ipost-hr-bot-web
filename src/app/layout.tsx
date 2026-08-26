@@ -33,6 +33,12 @@ export default function RootLayout({
   return (
     <html lang="uz" className={inter.variable}>
       <body>
+        {/* Mavzuni paint'dan oldin o'rnatish (flash bo'lmasligi uchun) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t!=='dark'&&t!=='light'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+          }}
+        />
         {/* Telegram Mini App SDK */}
         <Script
           src="https://telegram.org/js/telegram-web-app.js"

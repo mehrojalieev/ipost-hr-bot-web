@@ -26,8 +26,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       webapp?.expand();
       // Rang sozlamalari faqat Telegram 6.1+ da qo'llab-quvvatlanadi
       if (webapp?.isVersionAtLeast?.("6.1")) {
-        webapp.setHeaderColor?.("#1f3ce6");
-        webapp.setBackgroundColor?.("#f1f5fb");
+        const dark =
+          document.documentElement.getAttribute("data-theme") === "dark";
+        webapp.setHeaderColor?.("#1f30d6");
+        webapp.setBackgroundColor?.(dark ? "#0a1020" : "#f1f5fb");
       }
     } catch {
       /* brauzerda ochilganda tg mavjud emas */
@@ -90,11 +92,11 @@ function Denied({ reason, myId }: { reason?: string; myId?: number }) {
 
   return (
     <div className="min-h-dvh grid place-items-center bg-[var(--bg)] px-6">
-      <div className="max-w-sm w-full rounded-2xl bg-white border border-[var(--border)] shadow-sm p-7 text-center animate-fade-up">
+      <div className="max-w-sm w-full rounded-2xl bg-surface border border-[var(--border)] shadow-sm p-7 text-center animate-fade-up">
         <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-ink-900 grid place-items-center text-white">
           <Lock size={26} />
         </div>
-        <h1 className="text-lg font-semibold text-ink-900">Kirish cheklangan</h1>
+        <h1 className="text-lg font-semibold text-content">Kirish cheklangan</h1>
         <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
           {msg}
         </p>

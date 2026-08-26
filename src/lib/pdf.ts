@@ -12,7 +12,7 @@ function s(text: string): string {
 export async function exportVacanciesPdf(
   vacancies: Vacancy[],
   breakdown?: VacancyStat[]
-) {
+): Promise<"saved" | "canceled"> {
   const { jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
 
@@ -56,5 +56,41 @@ export async function exportVacanciesPdf(
     },
   });
 
-  doc.save("ipost-vakansiyalar.pdf");
+  const filename = "ipost-vakansiyalar.pdf";
+  const blob = doc.output("blob");
+
+  // File System Access API — foydalanuvchi qayerga saqlashni o'zi tanlaydi
+  const picker = (
+    window as unknown as {
+      showSaveFilePicker?: (opts: unknown) => Promise<{
+        createWritable: () => Promise<{
+          write: (data: Blob) => Promise<void>;
+          close: () => Promise<void>;
+        }>;
+      }>;
+    }
+  ).showSaveFilePicker;
+
+  if (typeof picker === "function") {
+    try {
+      const handle = await picker({
+        suggestedName: filename,
+        types: [
+          { description: "PDF hujjat", accept: { "application/pdf": [".pdf"] } },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return "saved";
+    } catch (e) {
+      // Foydalanuvchi oynani bekor qildi
+      if ((e as { name?: string })?.name === "AbortError") return "canceled";
+      // Aks holda oddiy yuklashga o'tamiz
+    }
+  }
+
+  // Fallback (Save-As qo'llab-quvvatlanmasa — Downloads'ga)
+  doc.save(filename);
+  return "saved";
 }

@@ -11,15 +11,20 @@ import {
   Play,
   Briefcase,
   FileDown,
+  Users,
+  X,
+  Phone,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { Vacancy, VacancyInput, VacancyStat } from "@/lib/types";
+import { Application, Vacancy, VacancyInput, VacancyStat } from "@/lib/types";
 import { exportVacanciesPdf } from "@/lib/pdf";
+import { formatDate } from "@/lib/format";
 import VacancyForm from "@/components/VacancyForm";
 import {
   ConfirmDialog,
   EmptyState,
   Spinner,
+  StatusBadge,
   Toast,
 } from "@/components/ui";
 
@@ -31,6 +36,8 @@ export default function VacanciesPage() {
   const [editing, setEditing] = useState<Vacancy | undefined>();
   const [toDelete, setToDelete] = useState<Vacancy | undefined>();
   const [breakdown, setBreakdown] = useState<VacancyStat[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [applicantsOf, setApplicantsOf] = useState<Vacancy | undefined>();
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   function load() {
@@ -43,9 +50,16 @@ export default function VacanciesPage() {
       .get<{ byVacancy: VacancyStat[] }>("/api/stats")
       .then((r) => setBreakdown(r.byVacancy))
       .catch(() => {});
+    api
+      .get<{ applications: Application[] }>("/api/applications")
+      .then((r) => setApplications(r.applications))
+      .catch(() => {});
   }
 
   useEffect(load, []);
+
+  const applicantsFor = (id: string) =>
+    applications.filter((a) => a.vacancyId === id);
 
   async function downloadPdf() {
     if (items.length === 0) {
@@ -53,8 +67,10 @@ export default function VacanciesPage() {
       return;
     }
     try {
-      await exportVacanciesPdf(items, breakdown);
-      setToast({ msg: "PDF yuklab olindi", type: "success" });
+      const result = await exportVacanciesPdf(items, breakdown);
+      if (result === "saved") {
+        setToast({ msg: "PDF saqlandi", type: "success" });
+      }
     } catch {
       setToast({ msg: "PDF yaratishda xatolik", type: "error" });
     }
@@ -124,7 +140,7 @@ export default function VacanciesPage() {
     <div className="animate-fade-up">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-ink-900">Vakansiyalar</h1>
+          <h1 className="text-xl font-bold text-content">Vakansiyalar</h1>
           <p className="text-sm text-[var(--text-muted)]">
             {items.length} ta lavozim
           </p>
@@ -133,7 +149,7 @@ export default function VacanciesPage() {
           <button
             onClick={downloadPdf}
             aria-label="PDF yuklab olish"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-white text-ink-700 px-3 py-2.5 text-sm font-semibold hover:bg-cloud hover:border-brand-300 active:scale-[0.97] transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-surface text-content px-3 py-2.5 text-sm font-semibold hover:bg-cloud hover:border-brand-300 active:scale-[0.97] transition"
           >
             <FileDown size={16} /> PDF
           </button>
@@ -159,7 +175,7 @@ export default function VacanciesPage() {
           {items.map((v) => (
             <div
               key={v.id}
-              className="rounded-2xl bg-white border border-[var(--border)] p-4 hover:border-brand-200 hover:shadow-sm transition"
+              className="rounded-2xl bg-surface border border-[var(--border)] p-4 hover:border-brand-200 hover:shadow-sm transition"
             >
               <div className="flex items-start gap-3">
                 <div className="h-11 w-11 shrink-0 rounded-xl bg-cloud grid place-items-center text-xl">
@@ -167,7 +183,7 @@ export default function VacanciesPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-ink-900 truncate">
+                    <h3 className="font-semibold text-content truncate">
                       {v.title}
                     </h3>
                     {!v.active && (
@@ -179,7 +195,7 @@ export default function VacanciesPage() {
                   <p className="text-xs text-[var(--text-muted)] mt-0.5">
                     {v.department} · {v.employment}
                   </p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-ink-700">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-content">
                     <span className="inline-flex items-center gap-1">
                       <Wallet size={13} className="text-brand-600" /> {v.salary}
                     </span>
@@ -194,7 +210,7 @@ export default function VacanciesPage() {
               <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2">
                 <button
                   onClick={() => toggleActive(v)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-700 rounded-lg px-2.5 py-1.5 hover:bg-cloud transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-content rounded-lg px-2.5 py-1.5 hover:bg-cloud transition-colors"
                 >
                   {v.active ? (
                     <>
@@ -205,6 +221,12 @@ export default function VacanciesPage() {
                       <Play size={13} /> Faollashtirish
                     </>
                   )}
+                </button>
+                <button
+                  onClick={() => setApplicantsOf(v)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 rounded-lg px-2.5 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
+                >
+                  <Users size={13} /> Arizalar ({applicantsFor(v.id).length})
                 </button>
                 <div className="ml-auto flex gap-1.5">
                   <button
@@ -247,6 +269,14 @@ export default function VacanciesPage() {
         onCancel={() => setToDelete(undefined)}
       />
 
+      {applicantsOf && (
+        <ApplicantsSheet
+          vacancy={applicantsOf}
+          applicants={applicantsFor(applicantsOf.id)}
+          onClose={() => setApplicantsOf(undefined)}
+        />
+      )}
+
       {toast && (
         <Toast
           message={toast.msg}
@@ -254,6 +284,85 @@ export default function VacanciesPage() {
           onClose={() => setToast(null)}
         />
       )}
+    </div>
+  );
+}
+
+function ApplicantsSheet({
+  vacancy,
+  applicants,
+  onClose,
+}: {
+  vacancy: Vacancy;
+  applicants: Application[];
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-ink-950/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface shadow-2xl animate-sheet"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+          <div className="min-w-0">
+            <h2 className="font-semibold text-content truncate">
+              {vacancy.emoji} {vacancy.title}
+            </h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              {applicants.length} ta ariza topshirgan
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Yopish"
+            className="h-8 w-8 shrink-0 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-2.5">
+          {applicants.length === 0 ? (
+            <EmptyState
+              icon={<Users size={24} />}
+              title="Hali ariza yo'q"
+              subtitle="Bu lavozimga hozircha hech kim topshirmagan."
+            />
+          ) : (
+            applicants.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-3 rounded-2xl border border-[var(--border)] p-3.5"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
+                  {a.name.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-content truncate">
+                    {a.name}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {a.telegramUser} · {formatDate(a.createdAt)}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
+                  <StatusBadge status={a.status} />
+                  <a
+                    href={`tel:${a.phone.replace(/\s/g, "")}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700"
+                  >
+                    <Phone size={11} /> {a.phone}
+                  </a>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

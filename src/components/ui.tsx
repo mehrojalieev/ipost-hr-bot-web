@@ -87,15 +87,15 @@ export function ConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-fade-up"
+        className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-xl animate-fade-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-base font-semibold text-ink-900">{title}</h3>
+        <h3 className="text-base font-semibold text-content">{title}</h3>
         <p className="mt-2 text-sm text-[var(--text-muted)]">{message}</p>
         <div className="mt-5 flex gap-2.5">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm font-medium text-ink-800 hover:bg-cloud active:scale-[0.98] transition"
+            className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm font-medium text-content hover:bg-cloud active:scale-[0.98] transition"
           >
             Bekor qilish
           </button>
@@ -124,11 +124,11 @@ export function EmptyState({
   subtitle?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white/50 py-14 text-center">
+    <div className="rounded-2xl border border-dashed border-[var(--border)] bg-surface/50 py-14 text-center">
       <div className="mx-auto h-14 w-14 rounded-2xl bg-cloud grid place-items-center text-[var(--text-muted)]">
         {icon}
       </div>
-      <p className="mt-3 font-semibold text-ink-900">{title}</p>
+      <p className="mt-3 font-semibold text-content">{title}</p>
       {subtitle && (
         <p className="mt-1 text-sm text-[var(--text-muted)]">{subtitle}</p>
       )}
