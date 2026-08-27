@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* data-theme="dark" uchun `dark:` variantini yoqamiz */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   /* iPOST JOBS brend — royal ko'k (logo rangi) */
   --color-brand-50: #eef1ff;

@@ -196,7 +196,7 @@ export default function VacancyForm({
             </span>
             <span
               className={`relative h-6 w-11 rounded-full transition-colors ${
-                form.active ? "bg-brand-500" : "bg-slate-300"
+                form.active ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-600"
               }`}
             >
               <span

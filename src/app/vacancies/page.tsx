@@ -189,7 +189,7 @@ export default function VacanciesPage() {
                       {v.title}
                     </h3>
                     {!v.active && (
-                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5">
+                      <span className="text-[10px] font-semibold text-[var(--text-muted)] bg-cloud rounded-full px-2 py-0.5">
                         Nofaol
                       </span>
                     )}
