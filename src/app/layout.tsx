@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="uz" className={inter.variable}>
+    <html lang="uz" className={inter.variable} suppressHydrationWarning>
       <body>
         {/* Mavzuni paint'dan oldin o'rnatish (flash bo'lmasligi uchun) */}
         <script

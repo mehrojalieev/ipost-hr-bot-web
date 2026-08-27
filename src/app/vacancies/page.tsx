@@ -23,6 +23,7 @@ import VacancyForm from "@/components/VacancyForm";
 import {
   ConfirmDialog,
   EmptyState,
+  SheetShell,
   Spinner,
   StatusBadge,
   Toast,
@@ -35,6 +36,7 @@ export default function VacanciesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Vacancy | undefined>();
   const [toDelete, setToDelete] = useState<Vacancy | undefined>();
+  const [toToggle, setToToggle] = useState<Vacancy | undefined>();
   const [breakdown, setBreakdown] = useState<VacancyStat[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [applicantsOf, setApplicantsOf] = useState<Vacancy | undefined>();
@@ -209,36 +211,33 @@ export default function VacanciesPage() {
 
               <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2">
                 <button
-                  onClick={() => toggleActive(v)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-content rounded-lg px-2.5 py-1.5 hover:bg-cloud transition-colors"
-                >
-                  {v.active ? (
-                    <>
-                      <Pause size={13} /> Nofaol qilish
-                    </>
-                  ) : (
-                    <>
-                      <Play size={13} /> Faollashtirish
-                    </>
-                  )}
-                </button>
-                <button
                   onClick={() => setApplicantsOf(v)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 rounded-lg px-2.5 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold text-brand-700 rounded-lg px-3 py-2 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
                 >
-                  <Users size={13} /> Arizalar ({applicantsFor(v.id).length})
+                  <Users size={14} /> Arizalar ({applicantsFor(v.id).length})
                 </button>
-                <div className="ml-auto flex gap-1.5">
+                <div className="ml-auto flex items-center gap-1.5">
+                  <button
+                    onClick={() => setToToggle(v)}
+                    aria-label={v.active ? "Nofaol qilish" : "Faollashtirish"}
+                    title={v.active ? "Nofaol qilish" : "Faollashtirish"}
+                    className="h-8 w-8 grid place-items-center rounded-lg bg-cloud text-content hover:bg-brand-500/10 hover:text-brand-700 transition-colors"
+                  >
+                    {v.active ? <Pause size={14} /> : <Play size={14} />}
+                  </button>
                   <button
                     onClick={() => openEdit(v)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 rounded-lg px-3 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
+                    aria-label="Tahrirlash"
+                    title="Tahrirlash"
+                    className="h-8 w-8 grid place-items-center rounded-lg bg-brand-500/10 text-brand-700 hover:bg-brand-500/20 transition-colors"
                   >
-                    <Pencil size={13} /> Tahrir
+                    <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => setToDelete(v)}
                     aria-label="O'chirish"
-                    className="inline-flex items-center text-xs font-semibold text-rose-600 rounded-lg px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
+                    title="O'chirish"
+                    className="h-8 w-8 grid place-items-center rounded-lg bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -267,6 +266,25 @@ export default function VacanciesPage() {
         message={`“${toDelete?.title}” butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.`}
         onConfirm={confirmDelete}
         onCancel={() => setToDelete(undefined)}
+      />
+
+      <ConfirmDialog
+        open={!!toToggle}
+        danger={!!toToggle?.active}
+        title={toToggle?.active ? "Nofaol qilish" : "Faollashtirish"}
+        message={
+          toToggle?.active
+            ? `“${toToggle?.title}” foydalanuvchilarga ko'rinmaydi. Nofaol qilasizmi?`
+            : `“${toToggle?.title}” foydalanuvchilarga ko'rinadi. Faollashtirasizmi?`
+        }
+        confirmLabel={
+          toToggle?.active ? "Ha, nofaol qilish" : "Ha, faollashtirish"
+        }
+        onConfirm={() => {
+          if (toToggle) toggleActive(toToggle);
+          setToToggle(undefined);
+        }}
+        onCancel={() => setToToggle(undefined)}
       />
 
       {applicantsOf && (
@@ -298,71 +316,67 @@ function ApplicantsSheet({
   onClose: () => void;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-ink-950/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface shadow-2xl animate-sheet"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="sticky top-0 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
-          <div className="min-w-0">
-            <h2 className="font-semibold text-content truncate">
-              {vacancy.emoji} {vacancy.title}
-            </h2>
-            <p className="text-xs text-[var(--text-muted)]">
-              {applicants.length} ta ariza topshirgan
-            </p>
+    <SheetShell onClose={onClose}>
+      {(close) => (
+        <>
+          <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+            <div className="min-w-0">
+              <h2 className="font-semibold text-content truncate">
+                {vacancy.emoji} {vacancy.title}
+              </h2>
+              <p className="text-xs text-[var(--text-muted)]">
+                {applicants.length} ta ariza topshirgan
+              </p>
+            </div>
+            <button
+              onClick={close}
+              aria-label="Yopish"
+              className="h-8 w-8 shrink-0 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
+            >
+              <X size={18} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Yopish"
-            className="h-8 w-8 shrink-0 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
-          >
-            <X size={18} />
-          </button>
-        </div>
 
-        <div className="p-5 space-y-2.5">
-          {applicants.length === 0 ? (
-            <EmptyState
-              icon={<Users size={24} />}
-              title="Hali ariza yo'q"
-              subtitle="Bu lavozimga hozircha hech kim topshirmagan."
-            />
-          ) : (
-            applicants.map((a) => (
-              <div
-                key={a.id}
-                className="flex items-center gap-3 rounded-2xl border border-[var(--border)] p-3.5"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
-                  {a.name.charAt(0)}
+          <div className="p-5 space-y-2.5">
+            {applicants.length === 0 ? (
+              <EmptyState
+                icon={<Users size={24} />}
+                title="Hali ariza yo'q"
+                subtitle="Bu lavozimga hozircha hech kim topshirmagan."
+              />
+            ) : (
+              applicants.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-3 rounded-2xl border border-[var(--border)] p-3.5"
+                >
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
+                    {a.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-content truncate">
+                      {a.name}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)] truncate">
+                      {a.telegramUser} · {formatDate(a.createdAt)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <StatusBadge status={a.status} />
+                    <a
+                      href={`tel:${a.phone.replace(/\s/g, "")}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700"
+                    >
+                      <Phone size={11} /> {a.phone}
+                    </a>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-content truncate">
-                    {a.name}
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] truncate">
-                    {a.telegramUser} · {formatDate(a.createdAt)}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-1.5">
-                  <StatusBadge status={a.status} />
-                  <a
-                    href={`tel:${a.phone.replace(/\s/g, "")}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700"
-                  >
-                    <Phone size={11} /> {a.phone}
-                  </a>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </SheetShell>
   );
 }

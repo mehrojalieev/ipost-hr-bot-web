@@ -8,6 +8,7 @@ import {
   Vacancy,
   VacancyInput,
 } from "@/lib/types";
+import { SheetShell } from "@/components/ui";
 
 const empty: VacancyInput = {
   title: "",
@@ -73,21 +74,16 @@ export default function VacancyForm({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-ink-950/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface shadow-2xl animate-sheet"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <SheetShell onClose={onClose}>
+      {(close) => (
+        <>
         {/* Header */}
-        <div className="sticky top-0 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
           <h2 className="font-semibold text-content">
             {initial ? "Vakansiyani tahrirlash" : "Yangi vakansiya"}
           </h2>
           <button
-            onClick={onClose}
+            onClick={close}
             aria-label="Yopish"
             className="h-8 w-8 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
           >
@@ -221,7 +217,7 @@ export default function VacancyForm({
         {/* Footer */}
         <div className="sticky bottom-0 bg-surface/95 backdrop-blur px-5 py-4 border-t border-[var(--border)] flex gap-2.5">
           <button
-            onClick={onClose}
+            onClick={close}
             className="flex-1 rounded-xl border border-[var(--border)] py-3 text-sm font-medium text-content hover:bg-cloud transition-colors"
           >
             Bekor
@@ -234,8 +230,9 @@ export default function VacancyForm({
             {saving ? "Saqlanmoqda…" : initial ? "Saqlash" : "Qo'shish"}
           </button>
         </div>
-      </div>
-    </div>
+        </>
+      )}
+    </SheetShell>
   );
 }
 

@@ -1,8 +1,43 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Check, TriangleAlert } from "lucide-react";
 import { Application, STATUS_LABELS } from "@/lib/types";
+
+// ---- Sheet (bottom-sheet / centered modal) — silliq ochilib-yopiladi ----
+export function SheetShell({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: (close: () => void) => React.ReactNode;
+}) {
+  const [closing, setClosing] = useState(false);
+  const close = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 200);
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={close}
+      className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink-950/50 backdrop-blur-sm transition-opacity duration-200 ${
+        closing ? "opacity-0" : "opacity-100"
+      }`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-surface shadow-2xl transition-all duration-200 ${
+          closing
+            ? "translate-y-8 opacity-0 sm:translate-y-2 sm:scale-95"
+            : "animate-sheet"
+        }`}
+      >
+        {children(close)}
+      </div>
+    </div>
+  );
+}
 
 // ---- Status badge ----
 const STATUS_STYLES: Record<Application["status"], string> = {

@@ -125,7 +125,8 @@ body {
   }
 }
 .animate-fade-up {
-  animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* backwards: animatsiyadan keyin transform qolmaydi (modal stacking-context bug'i oldini oladi) */
+  animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 @keyframes sheetUp {
@@ -139,7 +140,7 @@ body {
   }
 }
 .animate-sheet {
-  animation: sheetUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: sheetUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 @keyframes spin {

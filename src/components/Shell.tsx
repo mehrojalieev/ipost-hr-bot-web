@@ -12,30 +12,6 @@ const TABS = [
   { href: "/messages", label: "Murojaatlar", Icon: MessageSquare },
 ];
 
-// iPOST logo — tezkor strelka (motion-lines + nib) SVG rekonstruksiyasi
-function IpostMark({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 80 34" className={className} fill="none" aria-hidden>
-      {/* yuqori tezlik chiziqlari */}
-      <g stroke="currentColor" strokeLinecap="round">
-        <line x1="20" y1="7" x2="52" y2="7" strokeWidth="2.4" />
-        <line x1="10" y1="12" x2="56" y2="12" strokeWidth="2.6" />
-      </g>
-      {/* markaziy o'q tanasi + nib */}
-      <path
-        d="M6 17 L58 17 L74 17 L60 11 L60 23 Z"
-        fill="currentColor"
-        opacity="0.95"
-      />
-      {/* pastki tezlik chiziqlari */}
-      <g stroke="currentColor" strokeLinecap="round">
-        <line x1="10" y1="22" x2="56" y2="22" strokeWidth="2.6" />
-        <line x1="20" y1="27" x2="52" y2="27" strokeWidth="2.4" />
-      </g>
-    </svg>
-  );
-}
-
 export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isActive = (href: string) =>
@@ -46,9 +22,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {/* Header — iPOST brend ko'k */}
       <header className="safe-top sticky top-0 z-20 bg-gradient-to-r from-brand-700 via-brand-600 to-brand-600 text-white shadow-sm">
         <div className="mx-auto max-w-2xl px-4 min-h-14 py-2.5 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-white/15 ring-1 ring-white/20 grid place-items-center text-white">
-            <IpostMark className="h-4 w-8" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/ipost-mark-light.png"
+            alt="iPOST"
+            className="h-6 w-auto"
+          />
           <div className="leading-tight">
             <p className="text-[15px] font-extrabold tracking-tight">
               iPOST <span className="font-medium text-white/70">JOBS</span>
