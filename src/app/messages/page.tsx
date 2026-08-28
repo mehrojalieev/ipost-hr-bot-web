@@ -66,8 +66,8 @@ export default function MessagesPage() {
               onClick={() => setFilter(f.key)}
               className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                 active
-                  ? "bg-ink-900 text-white"
-                  : "bg-surface border border-[var(--border)] text-content hover:border-brand-300 hover:text-brand-700"
+                  ? "bg-ink-900 dark:bg-brand-600 text-white"
+                  : "bg-surface border border-[var(--border)] text-content hover:border-brand-300 hover:text-brand-700 dark:hover:text-brand-300"
               }`}
             >
               {f.label} {count > 0 && <span className="opacity-70">· {count}</span>}
@@ -97,7 +97,7 @@ export default function MessagesPage() {
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
+                <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700 dark:text-brand-300">
                   {m.name.charAt(0)}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -128,7 +128,7 @@ export default function MessagesPage() {
                   className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-lg px-3 py-1.5 transition-colors ${
                     m.status === "answered"
                       ? "text-[var(--text-muted)] bg-cloud hover:bg-cloud"
-                      : "text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20"
+                      : "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20"
                   }`}
                 >
                   <Check size={13} />
@@ -138,7 +138,7 @@ export default function MessagesPage() {
                   href={`https://t.me/${m.telegramUser.replace("@", "")}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 rounded-lg px-3 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
+                  className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300 rounded-lg px-3 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 transition-colors"
                 >
                   <Send size={13} /> Javob yozish
                 </a>

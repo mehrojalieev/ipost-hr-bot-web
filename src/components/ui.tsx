@@ -41,10 +41,10 @@ export function SheetShell({
 
 // ---- Status badge ----
 const STATUS_STYLES: Record<Application["status"], string> = {
-  new: "bg-brand-500/12 text-brand-700 ring-brand-500/20",
-  reviewing: "bg-amber-400/15 text-amber-700 ring-amber-500/20",
-  accepted: "bg-emerald-500/12 text-emerald-700 ring-emerald-500/20",
-  rejected: "bg-rose-500/12 text-rose-700 ring-rose-500/20",
+  new: "bg-brand-500/12 text-brand-700 dark:text-brand-300 ring-brand-500/20",
+  reviewing: "bg-amber-400/15 text-amber-700 dark:text-amber-300 ring-amber-500/20",
+  accepted: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 ring-emerald-500/20",
+  rejected: "bg-rose-500/12 text-rose-700 dark:text-rose-300 ring-rose-500/20",
 };
 const STATUS_DOT: Record<Application["status"], string> = {
   new: "bg-brand-500",
@@ -68,16 +68,18 @@ export function StatusBadge({ status }: { status: Application["status"] }) {
 export function Toast({
   message,
   type = "success",
+  action,
   onClose,
 }: {
   message: string;
   type?: "success" | "error";
+  action?: { label: string; onClick: () => void };
   onClose: () => void;
 }) {
   useEffect(() => {
-    const t = setTimeout(onClose, 2600);
+    const t = setTimeout(onClose, action ? 4000 : 2600);
     return () => clearTimeout(t);
-  }, [onClose]);
+  }, [onClose, action]);
 
   return (
     <div className="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 animate-fade-up">
@@ -92,6 +94,17 @@ export function Toast({
           <TriangleAlert size={16} strokeWidth={2.4} />
         )}
         {message}
+        {action && (
+          <button
+            onClick={() => {
+              action.onClick();
+              onClose();
+            }}
+            className="ml-1 font-bold text-brand-300 hover:text-brand-200 underline underline-offset-2"
+          >
+            {action.label}
+          </button>
+        )}
       </div>
     </div>
   );

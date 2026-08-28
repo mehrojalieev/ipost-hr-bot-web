@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import AuthGate from "@/components/AuthGate";
 import Shell from "@/components/Shell";
 
-const inter = Inter({
+const appFont = DM_Sans({
   subsets: ["latin"],
   variable: "--font-inter",
   weight: ["400", "500", "600", "700", "800"],
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="uz" className={inter.variable} suppressHydrationWarning>
+    <html lang="uz" className={appFont.variable} suppressHydrationWarning>
       <body>
         {/* Mavzuni paint'dan oldin o'rnatish (flash bo'lmasligi uchun) */}
         <script

@@ -225,7 +225,7 @@ export default function VacancyForm({
           <button
             onClick={submit}
             disabled={saving}
-            className="flex-[2] rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 active:scale-[0.99] transition"
+            className="flex-1 rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 active:scale-[0.99] transition"
           >
             {saving ? "Saqlanmoqda…" : initial ? "Saqlash" : "Qo'shish"}
           </button>

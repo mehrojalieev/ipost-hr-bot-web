@@ -7,14 +7,17 @@ import {
   Inbox,
   MessageSquare,
   CheckCircle2,
+  Clock,
   Plus,
   ClipboardList,
   ChevronRight,
   ArrowRight,
 } from "lucide-react";
+import { SHOW_MESSAGES } from "@/lib/features";
 import { api } from "@/lib/api";
-import { Application, VacancyStat } from "@/lib/types";
-import { StatusBadge, Spinner } from "@/components/ui";
+import { Application, VacancyInput, VacancyStat } from "@/lib/types";
+import { StatusBadge, Spinner, Toast } from "@/components/ui";
+import VacancyForm from "@/components/VacancyForm";
 import { relativeDay } from "@/lib/format";
 
 interface Stats {
@@ -31,26 +34,22 @@ const SHOW_BREAKDOWN = false;
 
 type Tint = "brand" | "amber" | "emerald" | "violet";
 
-const TINT: Record<Tint, { tile: string; sub: string; bar: string }> = {
+const TINT: Record<Tint, { tile: string; accent: string }> = {
   brand: {
-    tile: "bg-brand-500/12 text-brand-600",
-    sub: "bg-brand-500/12 text-brand-700",
-    bar: "bg-brand-500",
+    tile: "bg-brand-500/12 text-brand-600 dark:text-brand-400",
+    accent: "text-brand-600 dark:text-brand-400",
   },
   amber: {
-    tile: "bg-amber-500/15 text-amber-600",
-    sub: "bg-amber-500/15 text-amber-700",
-    bar: "bg-amber-500",
+    tile: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+    accent: "text-amber-600 dark:text-amber-400",
   },
   emerald: {
-    tile: "bg-emerald-500/12 text-emerald-600",
-    sub: "bg-emerald-500/12 text-emerald-700",
-    bar: "bg-emerald-500",
+    tile: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400",
+    accent: "text-emerald-600 dark:text-emerald-400",
   },
   violet: {
-    tile: "bg-violet-500/12 text-violet-600",
-    sub: "bg-violet-500/12 text-violet-700",
-    bar: "bg-violet-500",
+    tile: "bg-violet-500/12 text-violet-600 dark:text-violet-400",
+    accent: "text-violet-600 dark:text-violet-400",
   },
 };
 
@@ -59,33 +58,52 @@ export default function DashboardPage() {
   const [byVacancy, setByVacancy] = useState<VacancyStat[]>([]);
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    Promise.all([
+  async function refresh() {
+    const [s, a] = await Promise.all([
       api.get<{ stats: Stats; byVacancy: VacancyStat[] }>("/api/stats"),
       api.get<{ applications: Application[] }>("/api/applications"),
-    ])
-      .then(([s, a]) => {
-        setStats(s.stats);
-        setByVacancy(s.byVacancy);
-        setApps(a.applications);
-      })
-      .finally(() => setLoading(false));
+    ]);
+    setStats(s.stats);
+    setByVacancy(s.byVacancy);
+    setApps(a.applications);
+  }
+
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
   }, []);
+
+  async function handleAddVacancy(data: VacancyInput) {
+    setSaving(true);
+    try {
+      await api.post("/api/vacancies", data);
+      setFormOpen(false);
+      setToast("Vakansiya qo'shildi ✅");
+      await refresh();
+    } catch {
+      setToast("Saqlashda xatolik");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (loading) return <Spinner />;
 
   const accepted = apps.filter((a) => a.status === "accepted").length;
+  const reviewing = apps.filter((a) => a.status === "reviewing").length;
   const recent = apps.slice(0, 4);
   const maxCount = Math.max(1, ...byVacancy.map((v) => v.count));
   const totalByVac = byVacancy.reduce((s, v) => s + v.count, 0);
 
   return (
-    <div className="space-y-7 animate-fade-up">
+    <div className="space-y-5 animate-fade-up">
       {/* Salomlashish */}
       <div>
-        <p className="text-sm text-[var(--text-muted)]">Xush kelibsiz 👋</p>
-        <h1 className="text-2xl font-extrabold tracking-tight text-content">
+        <p className="text-xs text-[var(--text-muted)]">Xush kelibsiz 👋</p>
+        <h1 className="text-xl font-extrabold tracking-tight text-content">
           Boshqaruv paneli
         </h1>
       </div>
@@ -96,18 +114,12 @@ export default function DashboardPage() {
           icon={<Briefcase size={18} />}
           tint="brand"
           value={stats?.activeVacancies ?? 0}
-          sub={`${stats?.totalVacancies ?? 0} jami`}
           label="Faol vakansiya"
         />
         <StatCard
           icon={<Inbox size={18} />}
           tint="amber"
           value={stats?.totalApplications ?? 0}
-          sub={
-            (stats?.newApplications ?? 0) > 0
-              ? `${stats?.newApplications} yangi`
-              : undefined
-          }
           label="Arizalar"
         />
         <StatCard
@@ -116,17 +128,21 @@ export default function DashboardPage() {
           value={accepted}
           label="Qabul qilingan"
         />
-        <StatCard
-          icon={<MessageSquare size={18} />}
-          tint="violet"
-          value={stats?.totalMessages ?? 0}
-          sub={
-            (stats?.newMessages ?? 0) > 0
-              ? `${stats?.newMessages} yangi`
-              : undefined
-          }
-          label="Murojaatlar"
-        />
+        {SHOW_MESSAGES ? (
+          <StatCard
+            icon={<MessageSquare size={18} />}
+            tint="violet"
+            value={stats?.totalMessages ?? 0}
+            label="Murojaatlar"
+          />
+        ) : (
+          <StatCard
+            icon={<Clock size={18} />}
+            tint="violet"
+            value={reviewing}
+            label="Ko'rilmoqda"
+          />
+        )}
       </div>
 
       {/* Tez amallar */}
@@ -136,7 +152,7 @@ export default function DashboardPage() {
         </h2>
         <div className="space-y-2.5">
           <ActionRow
-            href="/vacancies"
+            onClick={() => setFormOpen(true)}
             icon={<Plus size={20} />}
             title="Vakansiya qo'shish"
             subtitle="Yangi ish o'rni e'lon qiling"
@@ -218,7 +234,7 @@ export default function DashboardPage() {
               key={a.id}
               className="flex items-center gap-3 rounded-2xl bg-surface border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm transition"
             >
-              <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700">
+              <div className="h-10 w-10 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700 dark:text-brand-300">
                 {a.name.charAt(0)}
               </div>
               <div className="min-w-0 flex-1">
@@ -234,6 +250,16 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {formOpen && (
+        <VacancyForm
+          saving={saving}
+          onSubmit={handleAddVacancy}
+          onClose={() => setFormOpen(false)}
+        />
+      )}
+
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }
@@ -242,60 +268,54 @@ function StatCard({
   icon,
   tint,
   value,
-  sub,
   label,
 }: {
   icon: React.ReactNode;
   tint: Tint;
   value: number;
-  sub?: string;
   label: string;
 }) {
   const t = TINT[tint];
   return (
-    <div className="rounded-2xl bg-surface border border-[var(--border)] p-3.5 hover:shadow-sm hover:-translate-y-0.5 transition">
-      <div className="flex items-center justify-between gap-2">
-        <span className={`grid place-items-center h-9 w-9 rounded-xl ${t.tile}`}>
-          {icon}
-        </span>
-        {sub && (
-          <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${t.sub}`}
-          >
-            {sub}
-          </span>
-        )}
-      </div>
-      <p className="mt-2.5 text-[26px] font-extrabold text-content leading-none">
+    <div className="group rounded-2xl bg-surface border border-[var(--border)] p-4 hover:shadow-md hover:border-brand-200 hover:-translate-y-0.5 transition">
+      <span
+        className={`grid place-items-center h-10 w-10 rounded-xl ${t.tile} transition-transform group-hover:scale-105`}
+      >
+        {icon}
+      </span>
+      <p className="mt-3 text-[26px] font-extrabold text-content leading-none tracking-tight">
         {value}
       </p>
-      <p className="mt-1 text-xs text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1.5 text-[13px] font-medium text-[var(--text-muted)] leading-tight">
+        {label}
+      </p>
     </div>
   );
 }
 
 function ActionRow({
   href,
+  onClick,
   icon,
   title,
   subtitle,
   primary,
 }: {
-  href: string;
+  href?: string;
+  onClick?: () => void;
   icon: React.ReactNode;
   title: string;
   subtitle: string;
   primary?: boolean;
 }) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3.5 rounded-2xl p-3.5 active:scale-[0.99] transition ${
-        primary
-          ? "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-600/20"
-          : "bg-surface border border-[var(--border)] text-content hover:border-brand-300 hover:shadow-sm"
-      }`}
-    >
+  const className = `w-full text-left flex items-center gap-3.5 rounded-2xl p-3.5 active:scale-[0.99] transition ${
+    primary
+      ? "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-600/20"
+      : "bg-surface border border-[var(--border)] text-content hover:border-brand-300 hover:shadow-sm"
+  }`;
+
+  const inner = (
+    <>
       <span
         className={`grid place-items-center h-11 w-11 shrink-0 rounded-xl ${
           primary ? "bg-white/15" : "bg-brand-500/12 text-brand-600"
@@ -317,6 +337,19 @@ function ActionRow({
         size={18}
         className={primary ? "text-white/70" : "text-[var(--text-muted)]"}
       />
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={className}>
+        {inner}
+      </button>
+    );
+  }
+  return (
+    <Link href={href || "#"} className={className}>
+      {inner}
     </Link>
   );
 }

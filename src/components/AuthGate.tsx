@@ -104,7 +104,7 @@ function Denied({ reason, myId }: { reason?: string; myId?: number }) {
         {typeof myId === "number" && myId > 0 && (
           <div className="mt-5 rounded-xl bg-cloud p-4">
             <p className="text-xs text-[var(--text-muted)]">Sizning Telegram ID</p>
-            <p className="mt-1 text-xl font-bold text-brand-700 tracking-wide select-all">
+            <p className="mt-1 text-xl font-bold text-brand-700 dark:text-brand-300 tracking-wide select-all">
               {myId}
             </p>
             <p className="mt-2 text-[11px] leading-snug text-[var(--text-muted)]">

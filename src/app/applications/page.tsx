@@ -1,29 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Phone,
-  Copy,
-  Inbox,
-  X,
-  Search,
-  ChevronRight,
-  CheckCircle2,
-  MinusCircle,
-} from "lucide-react";
+import { Inbox, X, Search, ChevronRight, ArrowUpDown } from "lucide-react";
 import { api } from "@/lib/api";
 import { Application, STATUS_LABELS } from "@/lib/types";
 import {
   ConfirmDialog,
   EmptyState,
-  SheetShell,
   Spinner,
   StatusBadge,
   Toast,
 } from "@/components/ui";
+import { ApplicationDetail } from "@/components/ApplicationDetail";
 import { formatDate } from "@/lib/format";
 
 type Filter = "all" | Application["status"];
+type Sort = "new" | "old" | "status";
+const PAGE = 20;
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "Barchasi" },
@@ -33,47 +26,37 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "rejected", label: STATUS_LABELS.rejected },
 ];
 
-// Filter chip ranglari — status badge bilan bir xil
 const STATUS_FILTER: Record<Application["status"], { on: string; off: string }> = {
   new: {
     on: "bg-brand-600 text-white border-brand-600",
-    off: "text-brand-700 border-brand-500/30 hover:bg-brand-500/10",
+    off: "text-brand-700 dark:text-brand-300 border-brand-500/30 hover:bg-brand-500/10",
   },
   reviewing: {
     on: "bg-amber-500 text-white border-amber-500",
-    off: "text-amber-700 border-amber-500/30 hover:bg-amber-500/10",
+    off: "text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/10",
   },
   accepted: {
     on: "bg-emerald-600 text-white border-emerald-600",
-    off: "text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/10",
+    off: "text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10",
   },
   rejected: {
     on: "bg-rose-600 text-white border-rose-600",
-    off: "text-rose-700 border-rose-500/30 hover:bg-rose-500/10",
+    off: "text-rose-700 dark:text-rose-300 border-rose-500/30 hover:bg-rose-500/10",
   },
 };
 
-const STATUS_FLOW: Application["status"][] = [
-  "new",
-  "reviewing",
-  "accepted",
-  "rejected",
-];
-
-// Sheet ichidagi holat tugmasi ranglari
-const STATUS_BTN: Record<Application["status"], string> = {
-  new: "bg-brand-600 text-white border-brand-600",
-  reviewing: "bg-amber-500 text-white border-amber-500",
-  accepted: "bg-emerald-600 text-white border-emerald-600",
-  rejected: "bg-rose-600 text-white border-rose-600",
+const STATUS_ORDER: Record<Application["status"], number> = {
+  new: 0,
+  reviewing: 1,
+  accepted: 2,
+  rejected: 3,
 };
 
-const STATUS_RING: Record<Application["status"], string> = {
-  new: "ring-brand-500/30",
-  reviewing: "ring-amber-500/30",
-  accepted: "ring-emerald-500/30",
-  rejected: "ring-rose-500/30",
-};
+interface ToastState {
+  msg: string;
+  type?: "success" | "error";
+  action?: { label: string; onClick: () => void };
+}
 
 export default function ApplicationsPage() {
   const [items, setItems] = useState<Application[]>([]);
@@ -81,14 +64,23 @@ export default function ApplicationsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [vac, setVac] = useState<string>("all");
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState<Application | undefined>();
-  const [pendingStatus, setPendingStatus] = useState<Application["status"] | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [sort, setSort] = useState<Sort>("new");
+  const [shown, setShown] = useState(PAGE);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [pending, setPending] = useState<{
+    app: Application;
+    status: Application["status"];
+  } | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   useEffect(() => {
     api
       .get<{ applications: Application[] }>("/api/applications")
-      .then((r) => setItems(r.applications))
+      .then((r) => {
+        setItems(r.applications);
+        // Kirganda ko'rilmagan (Yangi) arizalarga fokus
+        if (r.applications.some((a) => a.status === "new")) setFilter("new");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -104,7 +96,7 @@ export default function ApplicationsPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return items.filter(
+    const list = items.filter(
       (a) =>
         (filter === "all" || a.status === filter) &&
         (vac === "all" || a.vacancyId === vac) &&
@@ -112,27 +104,64 @@ export default function ApplicationsPage() {
           a.name.toLowerCase().includes(q) ||
           a.telegramUser.toLowerCase().includes(q))
     );
-  }, [items, filter, vac, query]);
+    list.sort((a, b) => {
+      if (sort === "status") {
+        const d = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+        if (d !== 0) return d;
+        return b.createdAt.localeCompare(a.createdAt);
+      }
+      return sort === "old"
+        ? a.createdAt.localeCompare(b.createdAt)
+        : b.createdAt.localeCompare(a.createdAt);
+    });
+    return list;
+  }, [items, filter, vac, query, sort]);
 
-  async function changeStatus(app: Application, status: Application["status"]) {
+  // Filtrlar o'zgarsa — pagination va ochiq oynani tiklaymiz
+  useEffect(() => {
+    setShown(PAGE);
+  }, [filter, vac, query, sort]);
+
+  // Ochiq indeks ro'yxatdan chiqib ketsa — moslаymiz (status o'zgargach avtomatik keyingisiga o'tadi)
+  useEffect(() => {
+    if (openIndex === null) return;
+    if (filtered.length === 0) setOpenIndex(null);
+    else if (openIndex >= filtered.length) setOpenIndex(filtered.length - 1);
+  }, [filtered.length, openIndex]);
+
+  const open =
+    openIndex !== null && openIndex < filtered.length
+      ? filtered[openIndex]
+      : undefined;
+
+  async function setStatus(app: Application, status: Application["status"]) {
+    const prev = app.status;
+    setItems((list) =>
+      list.map((a) => (a.id === app.id ? { ...a, status } : a))
+    );
     try {
       await api.patch(`/api/applications/${app.id}`, { status });
-      setItems((list) =>
-        list.map((a) => (a.id === app.id ? { ...a, status } : a))
-      );
-      setOpen((o) => (o && o.id === app.id ? { ...o, status } : o));
-      setToast(`Holat: ${STATUS_LABELS[status]}`);
     } catch {
-      setToast("Xatolik yuz berdi");
+      setItems((list) =>
+        list.map((a) => (a.id === app.id ? { ...a, status: prev } : a))
+      );
+      setToast({ msg: "Xatolik yuz berdi", type: "error" });
+      return;
     }
+    setToast({ msg: `Holat: ${STATUS_LABELS[status]}`, type: "success" });
   }
+
+  function onStatusSelect(s: Application["status"]) {
+    if (!open || open.status === s) return;
+    setPending({ app: open, status: s });
+  }
+
+  const visible = filtered.slice(0, shown);
 
   return (
     <div className="animate-fade-up">
       <h1 className="text-xl font-bold text-content mb-1">Arizalar</h1>
-      <p className="text-sm text-[var(--text-muted)] mb-4">
-        {items.length} ta ariza
-      </p>
+      <p className="text-sm text-[var(--text-muted)] mb-4">{items.length} ta ariza</p>
 
       {/* Qidiruv + lavozim filtri */}
       <div className="flex gap-2 mb-3">
@@ -175,7 +204,7 @@ export default function ApplicationsPage() {
           const c =
             f.key === "all"
               ? {
-                  on: "bg-ink-900 text-white border-ink-900",
+                  on: "bg-ink-900 dark:bg-brand-600 text-white border-ink-900 dark:border-brand-600",
                   off: "text-content border-[var(--border)] hover:border-brand-300",
                 }
               : STATUS_FILTER[f.key];
@@ -194,205 +223,109 @@ export default function ApplicationsPage() {
         })}
       </div>
 
+      {/* Saralash + natija soni */}
+      <div className="flex items-center justify-between mt-1 mb-3">
+        <span className="text-xs text-[var(--text-muted)]">
+          {filtered.length} ta ko&apos;rsatilmoqda
+        </span>
+        <label className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+          <ArrowUpDown size={14} />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as Sort)}
+            className="rounded-lg border border-[var(--border)] bg-surface px-2 py-1 text-content focus:border-brand-500 outline-none"
+          >
+            <option value="new">Yangilari birinchi</option>
+            <option value="old">Eskilari birinchi</option>
+            <option value="status">Holat bo&apos;yicha</option>
+          </select>
+        </label>
+      </div>
+
       {loading ? (
         <Spinner />
       ) : filtered.length === 0 ? (
-        <div className="mt-4">
-          <EmptyState
-            icon={<Inbox size={24} />}
-            title={query ? "Hech narsa topilmadi" : "Bu bo'limda ariza yo'q"}
-          />
-        </div>
+        <EmptyState
+          icon={<Inbox size={24} />}
+          title={query ? "Hech narsa topilmadi" : "Bu bo'limda ariza yo'q"}
+        />
       ) : (
-        <div className="space-y-2.5 mt-3">
-          {filtered.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setOpen(a)}
-              className="w-full text-left flex items-center gap-3 rounded-2xl bg-surface border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm active:scale-[0.99] transition"
-            >
-              <div
-                className={`h-11 w-11 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700 ring-2 ${
-                  STATUS_RING[a.status]
-                }`}
+        <>
+          <div className="space-y-2.5">
+            {visible.map((a, i) => (
+              <button
+                key={a.id}
+                onClick={() => setOpenIndex(i)}
+                className="w-full text-left flex items-center gap-3 rounded-2xl bg-surface border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm active:scale-[0.99] transition"
               >
-                {a.name.charAt(0)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-content truncate">
-                  {a.name}
-                </p>
-                <p className="text-xs text-[var(--text-muted)] truncate">
-                  {a.vacancyTitle} · {formatDate(a.createdAt)}
-                </p>
-              </div>
-              <StatusBadge status={a.status} />
-              <ChevronRight
-                size={18}
-                className="text-[var(--text-muted)] shrink-0"
-              />
+                <div className="h-11 w-11 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700 dark:text-brand-300">
+                  {a.name.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-content truncate">
+                    {a.name}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {a.vacancyTitle} · {formatDate(a.createdAt)}
+                  </p>
+                </div>
+                <StatusBadge status={a.status} />
+                <ChevronRight size={18} className="text-[var(--text-muted)] shrink-0" />
+              </button>
+            ))}
+          </div>
+
+          {filtered.length > shown && (
+            <button
+              onClick={() => setShown((s) => s + PAGE)}
+              className="mt-4 w-full rounded-xl border border-[var(--border)] bg-surface py-3 text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-cloud transition-colors"
+            >
+              Ko&apos;proq yuklash ({filtered.length - shown})
             </button>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
-      {/* Detail sheet */}
       {open && (
-        <ApplicationSheet
+        <ApplicationDetail
           app={open}
-          onClose={() => setOpen(undefined)}
-          onStatus={(s) => {
-            if (open.status !== s) setPendingStatus(s);
-          }}
+          pos={{ index: openIndex!, total: filtered.length }}
+          onPrev={openIndex! > 0 ? () => setOpenIndex(openIndex! - 1) : undefined}
+          onNext={
+            openIndex! < filtered.length - 1
+              ? () => setOpenIndex(openIndex! + 1)
+              : undefined
+          }
+          onStatus={onStatusSelect}
+          onClose={() => setOpenIndex(null)}
         />
       )}
 
       <ConfirmDialog
-        open={!!open && !!pendingStatus}
-        danger={pendingStatus === "rejected"}
+        open={!!pending}
+        danger={pending?.status === "rejected"}
         title="Holatni o'zgartirish"
         message={
-          open && pendingStatus
-            ? `“${open.name}” arizasini “${STATUS_LABELS[pendingStatus]}” holatiga o'tkazasizmi?`
+          pending
+            ? `“${pending.app.name}” arizasini “${STATUS_LABELS[pending.status]}” holatiga o'tkazasizmi?`
             : ""
         }
         confirmLabel="Ha, o'zgartirish"
         onConfirm={() => {
-          if (open && pendingStatus) changeStatus(open, pendingStatus);
-          setPendingStatus(null);
+          if (pending) setStatus(pending.app, pending.status);
+          setPending(null);
         }}
-        onCancel={() => setPendingStatus(null)}
+        onCancel={() => setPending(null)}
       />
 
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-    </div>
-  );
-}
-
-function ApplicationSheet({
-  app,
-  onClose,
-  onStatus,
-}: {
-  app: Application;
-  onClose: () => void;
-  onStatus: (s: Application["status"]) => void;
-}) {
-  return (
-    <SheetShell onClose={onClose}>
-      {(close) => (
-        <>
-          <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
-            <h2 className="font-semibold text-content">Ariza tafsiloti</h2>
-            <button
-              onClick={close}
-              aria-label="Yopish"
-              className="h-8 w-8 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="p-5 space-y-5">
-            <div className="flex items-center gap-3">
-              <div
-                className={`h-14 w-14 rounded-2xl bg-brand-500/12 grid place-items-center text-xl font-bold text-brand-700 ring-2 ${STATUS_RING[app.status]}`}
-              >
-                {app.name.charAt(0)}
-              </div>
-              <div>
-                <p className="font-semibold text-content text-lg">{app.name}</p>
-                <StatusBadge status={app.status} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2.5">
-              <Row label="Lavozim" value={app.vacancyTitle} />
-              <Row label="Telefon" value={app.phone} copy />
-              <Row label="Yosh" value={app.age} />
-              <Row label="Telegram" value={app.telegramUser} />
-              <Row
-                label="Rezyume"
-                value={app.hasResume ? "Biriktirilgan" : "Yo'q"}
-                ok={app.hasResume}
-              />
-              <Row label="Sana" value={formatDate(app.createdAt)} />
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-[var(--text-muted)] mb-1.5">
-                Ish tajribasi
-              </p>
-              <p className="rounded-xl bg-cloud p-3.5 text-sm text-content leading-relaxed">
-                {app.experience || "—"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-[var(--text-muted)] mb-2">
-                Holatni o&apos;zgartirish
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {STATUS_FLOW.map((s) => {
-                  const active = app.status === s;
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => onStatus(s)}
-                      className={`rounded-xl py-2.5 text-sm font-semibold border transition ${
-                        active
-                          ? STATUS_BTN[s]
-                          : "bg-surface border-[var(--border)] text-content hover:border-brand-300 hover:bg-brand-500/5"
-                      }`}
-                    >
-                      {STATUS_LABELS[s]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <a
-              href={`tel:${app.phone.replace(/\s/g, "")}`}
-              className="flex items-center justify-center gap-2 rounded-xl bg-brand-600 text-white py-3 text-sm font-semibold hover:bg-brand-700 active:scale-[0.99] transition"
-            >
-              <Phone size={16} /> Qo&apos;ng&apos;iroq qilish
-            </a>
-          </div>
-        </>
+      {toast && (
+        <Toast
+          message={toast.msg}
+          type={toast.type}
+          action={toast.action}
+          onClose={() => setToast(null)}
+        />
       )}
-    </SheetShell>
-  );
-}
-
-function Row({
-  label,
-  value,
-  copy,
-  ok,
-}: {
-  label: string;
-  value: string;
-  copy?: boolean;
-  ok?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-[var(--border)] px-3.5 py-2.5">
-      <span className="text-xs text-[var(--text-muted)]">{label}</span>
-      <span className="text-sm font-medium text-content flex items-center gap-2">
-        {ok === true && <CheckCircle2 size={15} className="text-emerald-600" />}
-        {ok === false && <MinusCircle size={15} className="text-[var(--text-muted)]" />}
-        {value}
-        {copy && (
-          <button
-            onClick={() => navigator.clipboard?.writeText(value)}
-            aria-label="Nusxalash"
-            className="text-brand-600"
-          >
-            <Copy size={14} />
-          </button>
-        )}
-      </span>
     </div>
   );
 }
