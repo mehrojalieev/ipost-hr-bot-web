@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Application, Vacancy, VacancyInput, VacancyStat } from "@/lib/types";
-import { exportVacanciesPdf } from "@/lib/pdf";
+import { exportVacanciesPdf, exportVacancyApplicantsPdf } from "@/lib/pdf";
 import { formatDate } from "@/lib/format";
 import VacancyForm from "@/components/VacancyForm";
 import {
@@ -70,6 +70,17 @@ export default function VacanciesPage() {
     }
     try {
       const result = await exportVacanciesPdf(items, breakdown);
+      if (result === "saved") {
+        setToast({ msg: "PDF saqlandi", type: "success" });
+      }
+    } catch {
+      setToast({ msg: "PDF yaratishda xatolik", type: "error" });
+    }
+  }
+
+  async function downloadApplicantsPdf(v: Vacancy) {
+    try {
+      const result = await exportVacancyApplicantsPdf(v, applicantsFor(v.id));
       if (result === "saved") {
         setToast({ msg: "PDF saqlandi", type: "success" });
       }
@@ -292,6 +303,7 @@ export default function VacanciesPage() {
           vacancy={applicantsOf}
           applicants={applicantsFor(applicantsOf.id)}
           onClose={() => setApplicantsOf(undefined)}
+          onPdf={() => downloadApplicantsPdf(applicantsOf)}
         />
       )}
 
@@ -310,16 +322,18 @@ function ApplicantsSheet({
   vacancy,
   applicants,
   onClose,
+  onPdf,
 }: {
   vacancy: Vacancy;
   applicants: Application[];
   onClose: () => void;
+  onPdf: () => void;
 }) {
   return (
     <SheetShell onClose={onClose}>
       {(close) => (
         <>
-          <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+          <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between gap-2">
             <div className="min-w-0">
               <h2 className="font-semibold text-content truncate">
                 {vacancy.emoji} {vacancy.title}
@@ -328,13 +342,21 @@ function ApplicantsSheet({
                 {applicants.length} ta ariza topshirgan
               </p>
             </div>
-            <button
-              onClick={close}
-              aria-label="Yopish"
-              className="h-8 w-8 shrink-0 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={onPdf}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-xs font-semibold text-content hover:bg-cloud hover:border-brand-300 transition-colors"
+              >
+                <FileDown size={14} /> PDF
+              </button>
+              <button
+                onClick={close}
+                aria-label="Yopish"
+                className="h-8 w-8 grid place-items-center rounded-full text-[var(--text-muted)] hover:bg-cloud"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           <div className="p-5 space-y-2.5">
