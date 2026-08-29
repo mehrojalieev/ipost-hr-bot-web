@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Phone,
   Copy,
@@ -8,8 +9,11 @@ import {
   ChevronRight,
   CheckCircle2,
   MinusCircle,
+  FileText,
+  Loader2,
 } from "lucide-react";
 import { Application, STATUS_LABELS } from "@/lib/types";
+import { openResume } from "@/lib/api";
 import { SheetShell, StatusBadge } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 
@@ -49,6 +53,16 @@ export function ApplicationDetail({
   onStatus: (status: Application["status"]) => void;
   onClose: () => void;
 }) {
+  const [resumeState, setResumeState] = useState<
+    "idle" | "loading" | "error" | "notfound"
+  >("idle");
+
+  async function handleResume() {
+    setResumeState("loading");
+    const r = await openResume(app.id);
+    setResumeState(r === "ok" ? "idle" : r === "not_found" ? "notfound" : "error");
+  }
+
   return (
     <SheetShell onClose={onClose}>
       {(close) => (
@@ -110,11 +124,42 @@ export function ApplicationDetail({
               <Row label="Telegram" value={app.telegramUser} />
               <Row
                 label="Rezyume"
-                value={app.hasResume ? "Biriktirilgan" : "Yo'q"}
+                value={
+                  app.hasResume
+                    ? app.resumeName || "Biriktirilgan"
+                    : "Yo'q"
+                }
                 ok={app.hasResume}
               />
               <Row label="Sana" value={formatDate(app.createdAt)} />
             </div>
+
+            {app.hasResume && (
+              <div>
+                <button
+                  onClick={handleResume}
+                  disabled={resumeState === "loading"}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-brand-500/30 bg-brand-500/10 text-brand-700 dark:text-brand-300 py-2.5 text-sm font-semibold hover:bg-brand-500/20 disabled:opacity-60 transition"
+                >
+                  {resumeState === "loading" ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <FileText size={16} />
+                  )}
+                  Rezyumeni ochish
+                </button>
+                {resumeState === "notfound" && (
+                  <p className="mt-1.5 text-xs text-amber-600 text-center">
+                    Rezyume fayli topilmadi.
+                  </p>
+                )}
+                {resumeState === "error" && (
+                  <p className="mt-1.5 text-xs text-rose-600 text-center">
+                    Ochishda xatolik. Qayta urinib ko&apos;ring.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <p className="text-xs font-semibold text-[var(--text-muted)] mb-1.5">

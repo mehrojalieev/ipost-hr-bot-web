@@ -1,20 +1,31 @@
-// Umumiy tiplar — bot bilan bir xil struktura (keyin Postgres/Prisma ga ko'chiriladi).
+// Umumiy tiplar — bot bilan bir xil struktura (bilingual). Manba: PostgreSQL (Prisma).
 
-export interface Vacancy {
-  id: string;
+export type Lang = "uz" | "ru";
+
+// Bitta til uchun vakansiya kontenti
+export interface VacancyContent {
   title: string;
-  emoji: string;
   department: string;
   employment: string;
   salary: string;
   location: string;
   description: string;
   requirements: string[];
+}
+
+// Vakansiya — 2 tilli
+export interface Vacancy {
+  id: string;
+  emoji: string;
   active: boolean;
+  uz: VacancyContent;
+  ru: VacancyContent;
   createdAt: string;
 }
 
 export type VacancyInput = Omit<Vacancy, "id" | "createdAt">;
+
+export type ApplicationStatus = "new" | "reviewing" | "accepted" | "rejected";
 
 export interface Application {
   id: string;
@@ -25,12 +36,16 @@ export interface Application {
   age: string;
   experience: string;
   hasResume: boolean;
-  status: "new" | "reviewing" | "accepted" | "rejected";
+  status: ApplicationStatus;
   telegramUser: string;
+  lang: Lang;
+  // Rezyume metadatasi (UI uchun; fayl yo'li/mime backendda qoladi)
+  resumeType?: string | null;
+  resumeName?: string | null;
   createdAt: string;
 }
 
-export const STATUS_LABELS: Record<Application["status"], string> = {
+export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   new: "Yangi",
   reviewing: "Ko'rilmoqda",
   accepted: "Qabul qilindi",
@@ -42,13 +57,13 @@ export interface Message {
   id: string;
   name: string;
   telegramUser: string;
-  topic: string; // mavzu (masalan: "Ish vaqti", "Ariza holati")
+  topic: string;
   text: string;
   status: "new" | "answered";
   createdAt: string;
 }
 
-// Vakansiya bo'yicha arizalar statistikasi (filtr/analitika uchun)
+// Vakansiya bo'yicha arizalar statistikasi (o'zbekcha nom bilan ko'rsatiladi)
 export interface VacancyStat {
   vacancyId: string;
   title: string;

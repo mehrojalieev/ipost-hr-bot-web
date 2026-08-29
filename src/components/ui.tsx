@@ -192,3 +192,47 @@ export function Spinner() {
     </div>
   );
 }
+
+// ---- Skeleton (yuklanish paytida) ----
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded-lg bg-cloud ${className}`} />;
+}
+
+// Karta-ro'yxat skeleton (arizalar/vakansiyalar)
+export function ListSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="space-y-2.5">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 rounded-2xl bg-surface border border-[var(--border)] p-3.5"
+        >
+          <Skeleton className="h-11 w-11 rounded-full shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3.5 w-1/2" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+          <Skeleton className="h-6 w-16 rounded-full shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Dashboard statistika grid skeleton
+export function StatGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-2.5">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-2xl bg-surface border border-[var(--border)] p-4"
+        >
+          <Skeleton className="h-10 w-10 rounded-xl" />
+          <Skeleton className="mt-3 h-6 w-12" />
+          <Skeleton className="mt-2 h-3 w-20" />
+        </div>
+      ))}
+    </div>
+  );
+}

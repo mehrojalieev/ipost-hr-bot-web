@@ -16,7 +16,7 @@ import {
 import { SHOW_MESSAGES } from "@/lib/features";
 import { api } from "@/lib/api";
 import { Application, VacancyInput, VacancyStat } from "@/lib/types";
-import { StatusBadge, Spinner, Toast } from "@/components/ui";
+import { StatusBadge, ListSkeleton, StatGridSkeleton, Toast } from "@/components/ui";
 import VacancyForm from "@/components/VacancyForm";
 import { relativeDay } from "@/lib/format";
 
@@ -90,7 +90,19 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading) return <Spinner />;
+  if (loading)
+    return (
+      <div className="space-y-5 animate-fade-up">
+        <div>
+          <p className="text-xs text-[var(--text-muted)]">Xush kelibsiz 👋</p>
+          <h1 className="text-xl font-extrabold tracking-tight text-content">
+            Boshqaruv paneli
+          </h1>
+        </div>
+        <StatGridSkeleton />
+        <ListSkeleton rows={3} />
+      </div>
+    );
 
   const accepted = apps.filter((a) => a.status === "accepted").length;
   const reviewing = apps.filter((a) => a.status === "reviewing").length;

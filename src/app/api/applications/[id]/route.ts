@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guard } from "@/lib/guard";
-import { updateApplicationStatus } from "@/lib/store";
-import { Application } from "@/lib/types";
+import {
+  getApplicationNotifyInfo,
+  updateApplicationStatus,
+} from "@/lib/store";
+import { notifyCandidate, shouldNotify } from "@/lib/notify";
+import { Application, Lang } from "@/lib/types";
+
+export const runtime = "nodejs";
 
 const VALID: Application["status"][] = [
   "new",
@@ -28,7 +34,24 @@ export async function PATCH(
   if (!VALID.includes(status)) {
     return NextResponse.json({ error: "bad_status" }, { status: 400 });
   }
-  const app = updateApplicationStatus(id, status);
+
+  const app = await updateApplicationStatus(id, status);
   if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return NextResponse.json({ application: app });
+
+  // Muhim qarorlarda nomzodga Telegram xabar yuboramiz (statusni buzmaydi)
+  let notified = false;
+  if (shouldNotify(status)) {
+    const info = await getApplicationNotifyInfo(id);
+    if (info?.telegramId) {
+      notified = await notifyCandidate({
+        telegramId: info.telegramId,
+        status,
+        lang: (info.lang === "ru" ? "ru" : "uz") as Lang,
+        vacancyTitle: info.vacancyTitle,
+        name: info.name,
+      });
+    }
+  }
+
+  return NextResponse.json({ application: app, notified });
 }

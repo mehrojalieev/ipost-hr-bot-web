@@ -28,8 +28,8 @@ import { ApplicationDetail } from "@/components/ApplicationDetail";
 import {
   ConfirmDialog,
   EmptyState,
+  ListSkeleton,
   SheetShell,
-  Spinner,
   StatusBadge,
   Toast,
 } from "@/components/ui";
@@ -82,8 +82,13 @@ export default function VacanciesPage() {
     setApplications((list) =>
       list.map((a) => (a.id === app.id ? { ...a, status } : a))
     );
+    let notified = false;
     try {
-      await api.patch(`/api/applications/${app.id}`, { status });
+      const r = await api.patch<{ notified?: boolean }>(
+        `/api/applications/${app.id}`,
+        { status }
+      );
+      notified = !!r.notified;
     } catch {
       setApplications((list) =>
         list.map((a) => (a.id === app.id ? { ...a, status: prev } : a))
@@ -91,7 +96,12 @@ export default function VacanciesPage() {
       setToast({ msg: "Xatolik yuz berdi", type: "error" });
       return;
     }
-    setToast({ msg: `Holat: ${STATUS_LABELS[status]}`, type: "success" });
+    setToast({
+      msg: notified
+        ? `Holat: ${STATUS_LABELS[status]} · nomzodga xabar yuborildi`
+        : `Holat: ${STATUS_LABELS[status]}`,
+      type: "success",
+    });
   }
 
   async function downloadPdf() {
@@ -207,7 +217,9 @@ export default function VacanciesPage() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <div className="mt-3">
+          <ListSkeleton rows={4} />
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={<Briefcase size={24} />}
@@ -227,18 +239,18 @@ export default function VacanciesPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-content truncate">
-                    {v.title}
+                    {v.uz.title}
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                    {v.department} · {v.employment}
+                    {v.uz.department} · {v.uz.employment}
                   </p>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-content">
                     <span className="inline-flex items-center gap-1">
-                      <Wallet size={13} className="text-brand-600" /> {v.salary}
+                      <Wallet size={13} className="text-brand-600" /> {v.uz.salary}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <MapPin size={13} className="text-[var(--text-muted)]" />{" "}
-                      {v.location}
+                      {v.uz.location}
                     </span>
                   </div>
                 </div>
@@ -318,7 +330,7 @@ export default function VacanciesPage() {
       <ConfirmDialog
         open={!!toDelete}
         title="Vakansiyani o'chirish"
-        message={`“${toDelete?.title}” butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.`}
+        message={`“${toDelete?.uz.title}” butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.`}
         onConfirm={confirmDelete}
         onCancel={() => setToDelete(undefined)}
       />
@@ -329,8 +341,8 @@ export default function VacanciesPage() {
         title={toToggle?.active ? "Nofaol qilish" : "Faollashtirish"}
         message={
           toToggle?.active
-            ? `“${toToggle?.title}” foydalanuvchilarga ko'rinmaydi. Nofaol qilasizmi?`
-            : `“${toToggle?.title}” foydalanuvchilarga ko'rinadi. Faollashtirasizmi?`
+            ? `“${toToggle?.uz.title}” foydalanuvchilarga ko'rinmaydi. Nofaol qilasizmi?`
+            : `“${toToggle?.uz.title}” foydalanuvchilarga ko'rinadi. Faollashtirasizmi?`
         }
         confirmLabel={
           toToggle?.active ? "Ha, nofaol qilish" : "Ha, faollashtirish"
@@ -430,7 +442,7 @@ function ApplicantsSheet({
           <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur px-5 py-4 border-b border-[var(--border)] flex items-center justify-between gap-2">
             <div className="min-w-0">
               <h2 className="font-semibold text-content truncate">
-                {vacancy.emoji} {vacancy.title}
+                {vacancy.emoji} {vacancy.uz.title}
               </h2>
               <p className="text-xs text-[var(--text-muted)]">
                 {applicants.length} ta ariza topshirgan

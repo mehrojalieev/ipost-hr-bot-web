@@ -5,8 +5,9 @@ import { getStats, getVacancyBreakdown } from "@/lib/store";
 export async function GET(req: NextRequest) {
   const { deny } = guard(req);
   if (deny) return deny;
-  return NextResponse.json({
-    stats: getStats(),
-    byVacancy: getVacancyBreakdown(),
-  });
+  const [stats, byVacancy] = await Promise.all([
+    getStats(),
+    getVacancyBreakdown(),
+  ]);
+  return NextResponse.json({ stats, byVacancy });
 }

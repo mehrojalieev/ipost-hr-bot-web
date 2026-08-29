@@ -5,5 +5,5 @@ import { listMessages } from "@/lib/store";
 export async function GET(req: NextRequest) {
   const { deny } = guard(req);
   if (deny) return deny;
-  return NextResponse.json({ messages: listMessages() });
+  return NextResponse.json({ messages: await listMessages() });
 }

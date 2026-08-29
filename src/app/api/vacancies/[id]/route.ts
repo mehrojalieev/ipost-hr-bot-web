@@ -10,7 +10,7 @@ export async function GET(
   const { deny } = guard(req);
   if (deny) return deny;
   const { id } = await params;
-  const vacancy = getVacancy(id);
+  const vacancy = await getVacancy(id);
   if (!vacancy) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ vacancy });
 }
@@ -32,7 +32,7 @@ export async function PUT(
   const err = validate(body);
   if (err) return NextResponse.json({ error: err }, { status: 400 });
 
-  const vacancy = updateVacancy(id, normalize(body));
+  const vacancy = await updateVacancy(id, normalize(body));
   if (!vacancy) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ vacancy });
 }
@@ -44,7 +44,7 @@ export async function DELETE(
   const { deny } = guard(req);
   if (deny) return deny;
   const { id } = await params;
-  const ok = deleteVacancy(id);
+  const ok = await deleteVacancy(id);
   if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

@@ -1,180 +1,92 @@
-// Mock ma'lumot ombori (xotirada). Keyinchalik Postgres + Prisma bilan almashtiriladi.
-// Diqqat: Vercel serverless da xotira saqlanmaydi — bu faqat demo/mock uchun.
-// Real saqlash uchun Postgres (Neon/Supabase) ulang.
+// Ma'lumot ombori — real PostgreSQL (Prisma orqali). Bot va panel shu bazadan foydalanadi.
+// Funksiya nomlari o'zgarmadi; endi async va bilingual (uz/ru).
 
-import { Application, Message, Vacancy, VacancyInput, VacancyStat } from "./types";
+import type {
+  Application as PApplication,
+  Message as PMessage,
+  Prisma,
+  Vacancy as PVacancy,
+} from "@prisma/client";
+import { prisma } from "./prisma";
+import {
+  Application,
+  ApplicationStatus,
+  Lang,
+  Message,
+  Vacancy,
+  VacancyContent,
+  VacancyInput,
+  VacancyStat,
+} from "./types";
 
-// --- Vakansiyalar (bot bilan bir xil boshlang'ich data) ---
-let vacancies: Vacancy[] = [
-  {
-    id: "call-operator",
-    title: "Call-operator",
-    emoji: "☎️",
-    department: "Mijozlarga xizmat",
-    employment: "To'liq stavka",
-    salary: "4 000 000 – 6 000 000 so'm",
-    location: "Toshkent, Chilonzor",
-    description:
-      "Mijozlar bilan telefon orqali ishlash, savollarga javob berish va murojaatlarni qayd etish.",
-    requirements: [
-      "O'zbek va rus tillarini yaxshi bilish",
-      "Muloqot va tinglash qobiliyati",
-      "Kompyuterda ishlash ko'nikmasi",
-      "Mas'uliyat va bosiqlik",
-    ],
-    active: true,
-    createdAt: "2026-08-20T09:00:00.000Z",
-  },
-  {
-    id: "courier",
-    title: "Kuryer",
-    emoji: "🛵",
-    department: "Yetkazib berish",
-    employment: "To'liq / Yarim stavka",
-    salary: "5 000 000 – 9 000 000 so'm",
-    location: "Toshkent bo'ylab",
-    description:
-      "Buyurtmalarni mijozlarga o'z vaqtida va butun holatda yetkazib berish.",
-    requirements: [
-      "18 yoshdan katta",
-      "Shahar yo'nalishlarini bilish",
-      "O'z transporti bo'lishi (afzallik)",
-      "Punktuallik va halollik",
-    ],
-    active: true,
-    createdAt: "2026-08-21T09:00:00.000Z",
-  },
-  {
-    id: "sales-manager",
-    title: "Sotuv menejeri",
-    emoji: "💼",
-    department: "Savdo bo'limi",
-    employment: "To'liq stavka",
-    salary: "6 000 000 so'm + bonus",
-    location: "Toshkent, Chilonzor",
-    description:
-      "Yangi mijozlarni jalb qilish, shartnomalar tuzish va savdo rejasini bajarish.",
-    requirements: [
-      "Savdo sohasida tajriba (afzallik)",
-      "Natijaga yo'naltirilganlik",
-      "Yaxshi muloqot ko'nikmalari",
-      "CRM tizimlari bilan ishlash",
-    ],
-    active: true,
-    createdAt: "2026-08-22T09:00:00.000Z",
-  },
-  {
-    id: "smm",
-    title: "SMM menejer",
-    emoji: "📱",
-    department: "Marketing",
-    employment: "Masofaviy",
-    salary: "5 000 000 – 8 000 000 so'm",
-    location: "Toshkent / Masofaviy",
-    description:
-      "Ijtimoiy tarmoqlarni yuritish, kontent tayyorlash va auditoriyani oshirish.",
-    requirements: [
-      "Instagram, Telegram, TikTok bilan ishlash",
-      "Kontent va dizaynga did",
-      "Copywriting ko'nikmasi",
-      "Portfolio (afzallik)",
-    ],
-    active: false,
-    createdAt: "2026-08-19T09:00:00.000Z",
-  },
-];
+// ---------- Prisma → API tiplariga aylantirish ----------
+function asContent(v: Prisma.JsonValue): VacancyContent {
+  const o = (v ?? {}) as Record<string, unknown>;
+  return {
+    title: String(o.title ?? ""),
+    department: String(o.department ?? ""),
+    employment: String(o.employment ?? ""),
+    salary: String(o.salary ?? ""),
+    location: String(o.location ?? ""),
+    description: String(o.description ?? ""),
+    requirements: Array.isArray(o.requirements)
+      ? (o.requirements as unknown[]).map((x) => String(x))
+      : [],
+  };
+}
 
-// --- Arizalar (mock) ---
-let applications: Application[] = [
-  {
-    id: "app-1",
-    vacancyId: "call-operator",
-    vacancyTitle: "Call-operator",
-    name: "Dilnoza Karimova",
-    phone: "+998 90 111 22 33",
-    age: "23",
-    experience: "1 yil call-markazda ishlaganman",
-    hasResume: true,
-    status: "new",
-    telegramUser: "@dilnoza_k",
-    createdAt: "2026-08-25T14:20:00.000Z",
-  },
-  {
-    id: "app-2",
-    vacancyId: "courier",
-    vacancyTitle: "Kuryer",
-    name: "Sardor Aliyev",
-    phone: "+998 93 444 55 66",
-    age: "27",
-    experience: "2 yil kuryerlik, o'z mototsiklim bor",
-    hasResume: false,
-    status: "reviewing",
-    telegramUser: "@sardor_a",
-    createdAt: "2026-08-25T11:05:00.000Z",
-  },
-  {
-    id: "app-3",
-    vacancyId: "sales-manager",
-    vacancyTitle: "Sotuv menejeri",
-    name: "Malika Yusupova",
-    phone: "+998 97 777 88 99",
-    age: "25",
-    experience: "3 yil savdo, CRM bilan ishlaganman",
-    hasResume: true,
-    status: "accepted",
-    telegramUser: "@malika_y",
-    createdAt: "2026-08-24T16:40:00.000Z",
-  },
-  {
-    id: "app-4",
-    vacancyId: "call-operator",
-    vacancyTitle: "Call-operator",
-    name: "Jasur Toshmatov",
-    phone: "+998 91 222 33 44",
-    age: "20",
-    experience: "yo'q",
-    hasResume: false,
-    status: "new",
-    telegramUser: "@jasur_t",
-    createdAt: "2026-08-26T08:15:00.000Z",
-  },
-];
+function toVacancy(v: PVacancy): Vacancy {
+  return {
+    id: v.id,
+    emoji: v.emoji,
+    active: v.active,
+    uz: asContent(v.uz),
+    ru: asContent(v.ru),
+    createdAt: v.createdAt.toISOString(),
+  };
+}
 
-// --- Murojaatlar (nomzodlardan kelgan xabarlar, mock) ---
-let messages: Message[] = [
-  {
-    id: "msg-1",
-    name: "Dilnoza Karimova",
-    telegramUser: "@dilnoza_k",
-    topic: "Ariza holati",
-    text: "Assalomu alaykum, Call-operator lavozimiga ariza qoldirgandim. Qachon javob bo'ladi?",
-    status: "new",
-    createdAt: "2026-08-26T09:10:00.000Z",
-  },
-  {
-    id: "msg-2",
-    name: "Bekzod Rahimov",
-    telegramUser: "@bekzod_r",
-    topic: "Ish vaqti",
-    text: "Kuryer uchun ish vaqti nechchidan nechchigacha? Yarim stavka bormi?",
-    status: "new",
-    createdAt: "2026-08-26T08:30:00.000Z",
-  },
-  {
-    id: "msg-3",
-    name: "Nigora Islomova",
-    telegramUser: "@nigora_i",
-    topic: "Maosh",
-    text: "Sotuv menejeri bonus tizimi qanday hisoblanadi?",
-    status: "answered",
-    createdAt: "2026-08-25T15:00:00.000Z",
-  },
-];
+function toApplication(a: PApplication): Application {
+  return {
+    id: a.id,
+    vacancyId: a.vacancyId,
+    vacancyTitle: a.vacancyTitle,
+    name: a.name,
+    phone: a.phone,
+    age: a.age,
+    experience: a.experience,
+    hasResume: a.hasResume,
+    status: a.status,
+    telegramUser: a.telegramUser,
+    lang: (a.lang === "ru" ? "ru" : "uz") as Lang,
+    resumeType: a.resumeType,
+    resumeName: a.resumeName,
+    createdAt: a.createdAt.toISOString(),
+  };
+}
 
-let idCounter = 100;
-function newId(prefix: string): string {
-  idCounter += 1;
-  return `${prefix}-${idCounter}`;
+function toMessage(m: PMessage): Message {
+  return {
+    id: m.id,
+    name: m.name,
+    telegramUser: m.telegramUser,
+    topic: m.topic,
+    text: m.text,
+    status: m.status,
+    createdAt: m.createdAt.toISOString(),
+  };
+}
+
+function contentToJson(c: VacancyContent): Prisma.InputJsonValue {
+  return {
+    title: c.title,
+    department: c.department,
+    employment: c.employment,
+    salary: c.salary,
+    location: c.location,
+    description: c.description,
+    requirements: c.requirements,
+  };
 }
 
 function slugify(title: string): string {
@@ -183,103 +95,248 @@ function slugify(title: string): string {
       .toLowerCase()
       .replace(/[^a-z0-9Ѐ-ӿ]+/gi, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 40) || newId("vac")
+      .slice(0, 40) || "vacancy"
   );
 }
 
 // ---------- Vakansiya CRUD ----------
-export function listVacancies(): Vacancy[] {
-  return [...vacancies].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export async function listVacancies(): Promise<Vacancy[]> {
+  const rows = await prisma.vacancy.findMany({ orderBy: { createdAt: "desc" } });
+  return rows.map(toVacancy);
 }
 
-export function getVacancy(id: string): Vacancy | undefined {
-  return vacancies.find((v) => v.id === id);
+// Faqat faol vakansiyalar (bot uchun)
+export async function listActiveVacancies(): Promise<Vacancy[]> {
+  const rows = await prisma.vacancy.findMany({
+    where: { active: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(toVacancy);
 }
 
-export function createVacancy(input: VacancyInput): Vacancy {
-  let id = slugify(input.title);
-  if (vacancies.some((v) => v.id === id)) id = `${id}-${newId("v")}`;
-  const vacancy: Vacancy = {
-    ...input,
-    id,
-    createdAt: new Date().toISOString(),
-  };
-  vacancies.unshift(vacancy);
-  return vacancy;
+export async function getVacancy(id: string): Promise<Vacancy | undefined> {
+  const v = await prisma.vacancy.findUnique({ where: { id } });
+  return v ? toVacancy(v) : undefined;
 }
 
-export function updateVacancy(
+export async function createVacancy(input: VacancyInput): Promise<Vacancy> {
+  const base = slugify(input.uz.title || input.ru.title);
+  let id = base;
+  for (let n = 2; await prisma.vacancy.findUnique({ where: { id } }); n++) {
+    id = `${base}-${n}`;
+  }
+  const v = await prisma.vacancy.create({
+    data: {
+      id,
+      emoji: input.emoji,
+      active: input.active,
+      uz: contentToJson(input.uz),
+      ru: contentToJson(input.ru),
+    },
+  });
+  return toVacancy(v);
+}
+
+export async function updateVacancy(
   id: string,
   input: VacancyInput
-): Vacancy | undefined {
-  const idx = vacancies.findIndex((v) => v.id === id);
-  if (idx === -1) return undefined;
-  vacancies[idx] = { ...vacancies[idx], ...input };
-  return vacancies[idx];
+): Promise<Vacancy | undefined> {
+  try {
+    const v = await prisma.vacancy.update({
+      where: { id },
+      data: {
+        emoji: input.emoji,
+        active: input.active,
+        uz: contentToJson(input.uz),
+        ru: contentToJson(input.ru),
+      },
+    });
+    return toVacancy(v);
+  } catch {
+    return undefined;
+  }
 }
 
-export function deleteVacancy(id: string): boolean {
-  const before = vacancies.length;
-  vacancies = vacancies.filter((v) => v.id !== id);
-  return vacancies.length < before;
+export async function deleteVacancy(id: string): Promise<boolean> {
+  try {
+    await prisma.vacancy.delete({ where: { id } });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ---------- Arizalar ----------
-export function listApplications(): Application[] {
-  return [...applications].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt)
-  );
+export async function listApplications(): Promise<Application[]> {
+  const rows = await prisma.application.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(toApplication);
 }
 
-export function updateApplicationStatus(
+export async function getApplication(
+  id: string
+): Promise<Application | undefined> {
+  const a = await prisma.application.findUnique({ where: { id } });
+  return a ? toApplication(a) : undefined;
+}
+
+// Rezyume fayl ma'lumotini olish (himoyalangan endpoint uchun — path/mime kerak)
+export async function getApplicationResumeMeta(id: string) {
+  const a = await prisma.application.findUnique({
+    where: { id },
+    select: {
+      resumePath: true,
+      resumeMime: true,
+      resumeName: true,
+      resumeType: true,
+      resumeFileId: true,
+      hasResume: true,
+    },
+  });
+  return a ?? undefined;
+}
+
+// Xabar yuborish uchun kerakli maydonlar (telegramId sensitive — clientga chiqmaydi)
+export async function getApplicationNotifyInfo(id: string) {
+  return prisma.application.findUnique({
+    where: { id },
+    select: { telegramId: true, lang: true, vacancyTitle: true, name: true },
+  });
+}
+
+export async function updateApplicationStatus(
   id: string,
-  status: Application["status"]
-): Application | undefined {
-  const app = applications.find((a) => a.id === id);
-  if (!app) return undefined;
-  app.status = status;
-  return app;
+  status: ApplicationStatus
+): Promise<Application | undefined> {
+  try {
+    const a = await prisma.application.update({
+      where: { id },
+      data: { status },
+    });
+    return toApplication(a);
+  } catch {
+    return undefined;
+  }
+}
+
+export interface NewApplicationInput {
+  vacancyId: string;
+  vacancyTitle: string;
+  name: string;
+  phone: string;
+  age?: string;
+  experience?: string;
+  telegramId?: string;
+  telegramUser?: string;
+  lang?: Lang;
+  resumeFileId?: string | null;
+  resumeType?: string | null;
+  resumeName?: string | null;
+  resumeMime?: string | null;
+  resumePath?: string | null;
+}
+
+export async function createApplication(
+  input: NewApplicationInput
+): Promise<Application> {
+  const a = await prisma.application.create({
+    data: {
+      vacancyId: input.vacancyId,
+      vacancyTitle: input.vacancyTitle,
+      name: input.name,
+      phone: input.phone,
+      age: input.age ?? "",
+      experience: input.experience ?? "",
+      telegramId: input.telegramId ?? "",
+      telegramUser: input.telegramUser ?? "",
+      lang: input.lang ?? "uz",
+      hasResume: Boolean(input.resumeFileId || input.resumePath),
+      resumeFileId: input.resumeFileId ?? null,
+      resumeType: input.resumeType ?? null,
+      resumeName: input.resumeName ?? null,
+      resumeMime: input.resumeMime ?? null,
+      resumePath: input.resumePath ?? null,
+    },
+  });
+  return toApplication(a);
+}
+
+// Rezyume yuklab olingach — path/mime'ni yozib qo'yish
+export async function setApplicationResume(
+  id: string,
+  data: { resumePath: string; resumeMime?: string | null; resumeName?: string | null }
+): Promise<void> {
+  await prisma.application.update({
+    where: { id },
+    data: {
+      resumePath: data.resumePath,
+      resumeMime: data.resumeMime ?? undefined,
+      resumeName: data.resumeName ?? undefined,
+      hasResume: true,
+    },
+  });
 }
 
 // ---------- Murojaatlar ----------
-export function listMessages(): Message[] {
-  return [...messages].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export async function listMessages(): Promise<Message[]> {
+  const rows = await prisma.message.findMany({ orderBy: { createdAt: "desc" } });
+  return rows.map(toMessage);
 }
 
-export function updateMessageStatus(
+export async function updateMessageStatus(
   id: string,
   status: Message["status"]
-): Message | undefined {
-  const m = messages.find((x) => x.id === id);
-  if (!m) return undefined;
-  m.status = status;
-  return m;
+): Promise<Message | undefined> {
+  try {
+    const m = await prisma.message.update({ where: { id }, data: { status } });
+    return toMessage(m);
+  } catch {
+    return undefined;
+  }
 }
 
 // ---------- Vakansiya bo'yicha arizalar (analitika/filtr) ----------
-export function getVacancyBreakdown(): VacancyStat[] {
+export async function getVacancyBreakdown(): Promise<VacancyStat[]> {
+  const [vacancies, grouped] = await Promise.all([
+    prisma.vacancy.findMany(),
+    prisma.application.groupBy({ by: ["vacancyId"], _count: { _all: true } }),
+  ]);
+  const counts = new Map(grouped.map((g) => [g.vacancyId, g._count._all]));
   return vacancies
     .map((v) => ({
       vacancyId: v.id,
-      title: v.title,
+      title: asContent(v.uz).title,
       emoji: v.emoji,
       active: v.active,
-      count: applications.filter((a) => a.vacancyId === v.id).length,
+      count: counts.get(v.id) ?? 0,
     }))
     .sort((a, b) => b.count - a.count);
 }
 
 // ---------- Statistika (dashboard) ----------
-export function getStats() {
-  const active = vacancies.filter((v) => v.active).length;
-  const newApps = applications.filter((a) => a.status === "new").length;
-  const newMsgs = messages.filter((m) => m.status === "new").length;
+export async function getStats() {
+  const [
+    totalVacancies,
+    activeVacancies,
+    totalApplications,
+    newApplications,
+    totalMessages,
+    newMessages,
+  ] = await Promise.all([
+    prisma.vacancy.count(),
+    prisma.vacancy.count({ where: { active: true } }),
+    prisma.application.count(),
+    prisma.application.count({ where: { status: "new" } }),
+    prisma.message.count(),
+    prisma.message.count({ where: { status: "new" } }),
+  ]);
   return {
-    totalVacancies: vacancies.length,
-    activeVacancies: active,
-    totalApplications: applications.length,
-    newApplications: newApps,
-    totalMessages: messages.length,
-    newMessages: newMsgs,
+    totalVacancies,
+    activeVacancies,
+    totalApplications,
+    newApplications,
+    totalMessages,
+    newMessages,
   };
 }

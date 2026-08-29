@@ -74,11 +74,11 @@ export async function exportVacanciesPdf(
     ],
     body: vacancies.map((v, i) => [
       String(i + 1),
-      s(v.title),
-      s(v.department),
-      s(v.employment),
-      s(v.salary),
-      s(v.location),
+      s(v.uz.title),
+      s(v.uz.department),
+      s(v.uz.employment),
+      s(v.uz.salary),
+      s(v.uz.location),
       String(countFor(v.id)),
       v.active ? "Faol" : "Nofaol",
     ]),
@@ -106,11 +106,11 @@ export async function exportVacancyApplicantsPdf(
   doc.text("iPOST HR", 14, 20);
   doc.setFontSize(14);
   doc.setTextColor(11, 19, 56);
-  doc.text(s(vacancy.title), 14, 29);
+  doc.text(s(vacancy.uz.title), 14, 29);
   doc.setFontSize(9);
   doc.setTextColor(90, 107, 136);
   doc.text(
-    `${s(vacancy.department)} · ${s(vacancy.salary)} · ${s(vacancy.location)}`,
+    `${s(vacancy.uz.department)} · ${s(vacancy.uz.salary)} · ${s(vacancy.uz.location)}`,
     14,
     35
   );

@@ -7,7 +7,7 @@ import { Application, STATUS_LABELS } from "@/lib/types";
 import {
   ConfirmDialog,
   EmptyState,
-  Spinner,
+  ListSkeleton,
   StatusBadge,
   Toast,
 } from "@/components/ui";
@@ -66,7 +66,9 @@ export default function ApplicationsPage() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("new");
   const [shown, setShown] = useState(PAGE);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // Ochiq ariza — ID bo'yicha (filtr o'zgarsa ham o'sha ariza qoladi).
+  // ids = ochilgan paytdagi ro'yxat "surati" (navigatsiya uchun), pos = shu ro'yxatdagi o'rin.
+  const [nav, setNav] = useState<{ ids: string[]; pos: number } | null>(null);
   const [pending, setPending] = useState<{
     app: Application;
     status: Application["status"];
@@ -122,25 +124,22 @@ export default function ApplicationsPage() {
     setShown(PAGE);
   }, [filter, vac, query, sort]);
 
-  // Ochiq indeks ro'yxatdan chiqib ketsa — moslаymiz (status o'zgargach avtomatik keyingisiga o'tadi)
-  useEffect(() => {
-    if (openIndex === null) return;
-    if (filtered.length === 0) setOpenIndex(null);
-    else if (openIndex >= filtered.length) setOpenIndex(filtered.length - 1);
-  }, [filtered.length, openIndex]);
-
-  const open =
-    openIndex !== null && openIndex < filtered.length
-      ? filtered[openIndex]
-      : undefined;
+  // Ochiq ariza — to'liq ro'yxatdan (items) ID bo'yicha olinadi, shuning uchun status
+  // o'zgarsa ham (filtrga to'g'ri kelmay qolса ham) o'sha ariza o'rnida turaveradi.
+  const open = nav ? items.find((a) => a.id === nav.ids[nav.pos]) : undefined;
 
   async function setStatus(app: Application, status: Application["status"]) {
     const prev = app.status;
     setItems((list) =>
       list.map((a) => (a.id === app.id ? { ...a, status } : a))
     );
+    let notified = false;
     try {
-      await api.patch(`/api/applications/${app.id}`, { status });
+      const r = await api.patch<{ notified?: boolean }>(
+        `/api/applications/${app.id}`,
+        { status }
+      );
+      notified = !!r.notified;
     } catch {
       setItems((list) =>
         list.map((a) => (a.id === app.id ? { ...a, status: prev } : a))
@@ -148,7 +147,12 @@ export default function ApplicationsPage() {
       setToast({ msg: "Xatolik yuz berdi", type: "error" });
       return;
     }
-    setToast({ msg: `Holat: ${STATUS_LABELS[status]}`, type: "success" });
+    setToast({
+      msg: notified
+        ? `Holat: ${STATUS_LABELS[status]} · nomzodga xabar yuborildi`
+        : `Holat: ${STATUS_LABELS[status]}`,
+      type: "success",
+    });
   }
 
   function onStatusSelect(s: Application["status"]) {
@@ -243,7 +247,7 @@ export default function ApplicationsPage() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <ListSkeleton rows={6} />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Inbox size={24} />}
@@ -255,7 +259,9 @@ export default function ApplicationsPage() {
             {visible.map((a, i) => (
               <button
                 key={a.id}
-                onClick={() => setOpenIndex(i)}
+                onClick={() =>
+                  setNav({ ids: filtered.map((x) => x.id), pos: i })
+                }
                 className="w-full text-left flex items-center gap-3 rounded-2xl bg-surface border border-[var(--border)] p-3.5 hover:border-brand-200 hover:shadow-sm active:scale-[0.99] transition"
               >
                 <div className="h-11 w-11 shrink-0 rounded-full bg-brand-500/12 grid place-items-center font-semibold text-brand-700 dark:text-brand-300">
@@ -286,18 +292,20 @@ export default function ApplicationsPage() {
         </>
       )}
 
-      {open && (
+      {open && nav && (
         <ApplicationDetail
           app={open}
-          pos={{ index: openIndex!, total: filtered.length }}
-          onPrev={openIndex! > 0 ? () => setOpenIndex(openIndex! - 1) : undefined}
+          pos={{ index: nav.pos, total: nav.ids.length }}
+          onPrev={
+            nav.pos > 0 ? () => setNav({ ...nav, pos: nav.pos - 1 }) : undefined
+          }
           onNext={
-            openIndex! < filtered.length - 1
-              ? () => setOpenIndex(openIndex! + 1)
+            nav.pos < nav.ids.length - 1
+              ? () => setNav({ ...nav, pos: nav.pos + 1 })
               : undefined
           }
           onStatus={onStatusSelect}
-          onClose={() => setOpenIndex(null)}
+          onClose={() => setNav(null)}
         />
       )}
 

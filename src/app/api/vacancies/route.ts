@@ -7,7 +7,7 @@ import { normalize, validate } from "@/lib/vacancy-validate";
 export async function GET(req: NextRequest) {
   const { deny } = guard(req);
   if (deny) return deny;
-  return NextResponse.json({ vacancies: listVacancies() });
+  return NextResponse.json({ vacancies: await listVacancies() });
 }
 
 export async function POST(req: NextRequest) {
@@ -24,6 +24,6 @@ export async function POST(req: NextRequest) {
   const err = validate(body);
   if (err) return NextResponse.json({ error: err }, { status: 400 });
 
-  const vacancy = createVacancy(normalize(body));
+  const vacancy = await createVacancy(normalize(body));
   return NextResponse.json({ vacancy }, { status: 201 });
 }

@@ -52,6 +52,27 @@ async function request<T>(
   return res.json() as Promise<T>;
 }
 
+// Rezyumeni ochish — autentifikatsiya header bilan olib, yangi oynada ko'rsatadi.
+// (To'g'ridan-to'g'ri havola ochilsa header ketmaydi → 401; shuning uchun blob orqali.)
+export async function openResume(
+  appId: string
+): Promise<"ok" | "not_found" | "error"> {
+  try {
+    const res = await fetch(`/api/resume/${appId}`, {
+      headers: { "x-telegram-init-data": getInitData() },
+    });
+    if (res.status === 404) return "not_found";
+    if (!res.ok) return "error";
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    return "ok";
+  } catch {
+    return "error";
+  }
+}
+
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body: unknown) =>
